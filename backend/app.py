@@ -117,10 +117,51 @@ class BusinessList:
                     city VARCHAR(100),
                     state VARCHAR(100),
                     area VARCHAR(500),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY unique_business (name,address)
                 )""")
 
-                insert_query = """
+                # Creating or inserting data for the incomplete entries
+                
+                # cursor.execute("""
+                # CREATE TABLE IF NOT EXISTS businesses_incomplete (
+                #     id INT AUTO_INCREMENT PRIMARY KEY,
+                #     name VARCHAR(500),
+                #     address TEXT,
+                #     website VARCHAR(500),
+                #     phone_number VARCHAR(100),
+                #     reviews_count INT,
+                #     reviews_average FLOAT,
+                #     category VARCHAR(255),
+                #     subcategory VARCHAR(500),
+                #     city VARCHAR(100),
+                #     state VARCHAR(100),
+                #     area VARCHAR(500),
+                #     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                # )
+                # """)
+
+                # Creating or inserting data for the duplicate entries
+
+                # cursor.execute("""
+                # CREATE TABLE IF NOT EXISTS businesses_duplicates (
+                #     id INT AUTO_INCREMENT PRIMARY KEY,
+                #     name VARCHAR(500),
+                #     address TEXT,
+                #     website VARCHAR(500),
+                #     phone_number VARCHAR(100),
+                #     reviews_count INT,
+                #     reviews_average FLOAT,
+                #     category VARCHAR(255),
+                #     subcategory VARCHAR(500),
+                #     city VARCHAR(100),
+                #     state VARCHAR(100),
+                #     area VARCHAR(500),
+                #     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                # )
+                # """)
+
+                insert_query_complete_entries = """
                 INSERT INTO businesses (
                     name, address, website, phone_number,
                     reviews_count, reviews_average, category,
@@ -135,8 +176,33 @@ class BusinessList:
                     area = VALUES(area)
                 """
 
+                # this will be used during the handling of duplicate entries
+                # ON DUPLICATE KEY UPDATE
+                #     website = VALUES(website),
+                #     phone_number = VALUES(phone_number),
+                #     reviews_count = VALUES(reviews_count),
+                #     reviews_average = VALUES(reviews_average),
+                #     subcategory = VALUES(subcategory),
+                #     area = VALUES(area)
+
+                insert_query_incomplete_entries = """
+                INSERT INTO businesses_incomplete (
+                    name, address, website, phone_number,
+                    reviews_count, reviews_average, category,
+                    subcategory, city, state, area
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+
+                insert_query_duplicate_entries = """
+                INSERT INTO businesses_duplicates (
+                    name, address, website, phone_number,
+                    reviews_count, reviews_average, category,
+                    subcategory, city, state, area
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+
                 for business in self.business_list:
-                    cursor.execute(insert_query, (
+                    cursor.execute(insert_query_complete_entries, (
                         business.name,
                         business.address,
                         business.website,
