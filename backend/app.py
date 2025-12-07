@@ -1,6 +1,6 @@
 from flask import request, jsonify, render_template, redirect,Flask
 from flask_cors import CORS
-import os, sys, re, time, random, json, argparse, threading,csv
+import os, sys, re, time, random, json, argparse, threading, csv, hashlib
 import pandas as pd
 import mysql.connector
 from mysql.connector import Error
@@ -445,19 +445,41 @@ def main():
 
 
 def safe_get(row,column):
-        value = getattr(row, column, None)
-        return None if pd.isna(value) else value
+    value = getattr(row, column, None)
+    return None if pd.isna(value) else value
 
-@app.route('/upload_schoolgis_data', methods=["POST"])
-def upload_schoolgis_data():
+def clean_phone(value):
+    if value is None:
+        return None
+    
+    value = str(value).strip()
+
+    if value.endswith(".0"):
+        value = value[:-2]
+
+    # Remove any accidental whitespace
+    value = value.strip()
+
+    # Remove invalid values
+    if value in ["", "0", "nan", "None"]:
+        return None
+    if value[0] =='0':
+        return value[1:]
+
+    return value
+
+
+@app.route('/upload_asklaila_data', methods=["POST"])
+def upload_asklaila_data():
 
     connection = None
     inserted = 0
+    batch_size = 10000
     try:
         connection = mysql.connector.connect(
             host=os.getenv('DB_HOST'),
             user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
+            password=os.getenv('DB_PASSWORD_PLAIN'),
             database=os.getenv('DB_NAME'),
             port=os.getenv('DB_PORT')
         )
@@ -465,47 +487,72 @@ def upload_schoolgis_data():
 
         if request.files:
             files = request.files.getlist("file")
-            rows_to_insert = []
-
             for file in files:
                 if file.filename == "":
                     continue
-                
-                df = pd.read_csv(file)
+                chunkFile_data = pd.read_csv(file,chunksize = batch_size)
+                for chunk in chunkFile_data:
+                    chunk_data = []
+                    chunk = chunk.rename(columns=lambda c: c.replace(" ", "_"))
+                    for row in chunk.itertuples(index=False):
+                        # print(row.phone_2)
 
-                # iterate rows
-                for row in df.itertuples(index=False):
-                    row_tuple = (
+                        row_tuple = (
+                        safe_get(row,'source'),
                         safe_get(row, 'name'),
-                        safe_get(row, 'pincode'),
-                        safe_get(row, 'latitude'),
-                        safe_get(row, 'longitude'),
-                        safe_get(row, 'subcategory'),
-                        safe_get(row, 'city'),
-                        safe_get(row, 'state'),
-                        safe_get(row, 'country'),
-                        safe_get(row, 'category')
-                    )
-                    rows_to_insert.append(row_tuple)
-                    inserted += 1
+                        clean_phone(safe_get(row, 'phone_1')),
+                        clean_phone(safe_get(row, 'phone_2')),
+                        safe_get(row, 'category'),
+                        safe_get(row, 'sub_category'),
+                        safe_get(row, 'email'),
+                        safe_get(row, 'url'),
+                        safe_get(row, 'ratings'),
+                        safe_get(row, 'address'),
+                        safe_get(row,'pincode'),
+                        safe_get(row,'area'),
+                        safe_get(row,'city'),
+                        safe_get(row,'state'),
+                        safe_get(row,'country'),
+                        )
+                        chunk_data.append(row_tuple)
+                        inserted += 1
 
             # execute batch insert
-            insert_query = '''
-                INSERT INTO schoolgis (
-                    name, pincode, latitude, longitude, subcategory,
-                    city, state, country, category
-                ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            '''
-            cursor.executemany(insert_query, rows_to_insert)
-            connection.commit()
+                    insert_query = '''
+                        INSERT INTO asklaila (
+                            source, name, phone1, phone2, category,
+                            subcategory, email, url, ratings, address, pincode, area, city, state, country
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        ON DUPLICATE KEY UPDATE
+                            source = VALUES(source),
+                            phone1 = VALUES(phone1),
+                            phone2 = VALUES(phone2),
+                            category = VALUES(category),
+                            subcategory = VALUES(subcategory),
+                            email = VALUES(email),
+                            url = VALUES(url),
+                            ratings = VALUES(ratings),
+                            pincode = VALUES(pincode),
+                            area = VALUES(area),
+                            city = VALUES(city),
+                            state = VALUES(state),
+                            country = VALUES(country);
+                        '''
+                    cursor.executemany(insert_query, chunk_data)
+                    connection.commit()
 
     except Error as e:
         print("Error inserting data:", e)
         return jsonify({
             "status": "error",
-            "message": "Invalid CSV format"
+            "message": f"Database error:{e}"
         }), 400
-
+    except Exception as e:
+        print("Error inserting the data:",e)
+        return jsonify({
+            "status":"error",
+            "message":f"Processiong error:{e}"
+        })
     finally:
         if connection and connection.is_connected():
             connection.close()
@@ -514,6 +561,86 @@ def upload_schoolgis_data():
         "status": "success",
         "inserted_rows": inserted
     })
+
+@app.route('/upload_schoolgis_data', methods=["POST"])
+def upload_schoolgis_data():
+
+    connection = None
+    inserted = 0
+    batch_size = 10000
+    try:
+        connection = mysql.connector.connect(
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PASSWORD_PLAIN'),
+            database=os.getenv('DB_NAME'),
+            port=os.getenv('DB_PORT')
+        )
+        cursor = connection.cursor()
+
+        if request.files:
+            files = request.files.getlist("file")
+            for file in files:
+                if file.filename == "":
+                    continue
+                chunkFile_data = pd.read_csv(file,chunksize = batch_size)
+                for chunk in chunkFile_data:
+                    chunk_data = []
+                    chunk = chunk.rename(columns=lambda c: c.replace(" ", "_"))
+                    for row in chunk.itertuples(index=False):
+                        row_tuple = (
+                        safe_get(row, 'Name'),
+                        safe_get(row, 'Pincode'),
+                        safe_get(row, 'Latitude'),
+                        safe_get(row, 'Longitude'),
+                        safe_get(row, 'Subcategory'),
+                        safe_get(row, 'City'),
+                        safe_get(row, 'State'),
+                        safe_get(row, 'Country'),
+                        safe_get(row, 'Category'),
+                        safe_get(row,'Source'),
+                        )
+                        chunk_data.append(row_tuple)
+                        inserted += 1
+
+            # execute batch insert
+                    insert_query = '''
+                        INSERT INTO schoolgis (
+                            name, pincode, latitude, longitude, subcategory,
+                            city, state, country,category,source
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        ON DUPLICATE KEY UPDATE
+                            pincode = VALUES(pincode),
+                            subcategory = VALUES(subcategory),
+                            city = VALUES(city),
+                            state = VALUES(state),
+                            country = VALUES(country),
+                            category = VALUES(category),
+                            source = VALUES(source);
+                        '''
+                    cursor.executemany(insert_query, chunk_data)
+                    connection.commit()
+
+    except Error as e:
+        print("Error inserting data:", e)
+        return jsonify({
+            "status": "error",
+            "message": f"Database error:{e}"
+        }), 400
+    except Exception as e:
+        print("Error inserting the data:",e)
+        return jsonify({
+            "status":"error",
+            "message":f"Processiong error:{e}"
+        })
+    finally:
+        if connection and connection.is_connected():
+            connection.close()
+
+    return jsonify({
+        "status": "success",
+        "inserted_rows": inserted
+    }),200
 
 @app.route('/upload_yellow_pages_data', methods=["POST"])
 def upload_yellow_pages_data():
@@ -535,50 +662,63 @@ def upload_yellow_pages_data():
 
         if request.files:
             files = request.files.getlist("file")
-            rows_to_insert = []
-
             for file in files:
                 if file.filename == "":
                     continue
+                chunkFile_data = pd.read_csv(file,chunksize = batch_size)
+                for chunk in chunkFile_data:
+                    chunk = chunk.rename(columns=lambda c: c.replace(" ", "_"))
+                    chunk_data = []
+                    for row in chunk.itertuples(index=False):
+                        row_tuple = (
+                            safe_get(row, 'Name'),
+                            safe_get(row, 'Address'),
+                            safe_get(row, 'Area'),
+                            safe_get(row, 'Number'),
+                            safe_get(row, 'Mail'),
+                            safe_get(row, 'Category'),
+                            safe_get(row, 'Pincode'),
+                            safe_get(row, 'City'),
+                            safe_get(row, 'State'),
+                            safe_get(row, 'Country'),
+                            safe_get(row, 'Source')
+                        )
 
-                df = pd.read_csv(file)
+                        chunk_data.append(row_tuple)
+                        inserted += 1
 
-                for row in df.itertuples(index=False):
-                    row_tuple = (
-                        safe_get(row, 'Name'),
-                        safe_get(row, 'Address'),
-                        safe_get(row, 'Area'),
-                        safe_get(row, 'Number'),
-                        safe_get(row, 'Mail'),
-                        safe_get(row, 'Category'),
-                        safe_get(row, 'Pincode'),
-                        safe_get(row, 'City'),
-                        safe_get(row, 'State'),
-                        safe_get(row, 'Country'),
-                        safe_get(row, 'Source')
-                    )
+                    insert_query = """
+                        INSERT INTO yellow_pages (
+                            name, address, area, number, mail, category,
+                            pincode, city, state, country, source
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE
+                        area = VALUES(area),
+                        number = VALUES(number),
+                        mail = VALUES(mail),
+                        category = VALUES(category),
+                        pincode = VALUES(pincode),
+                        city = VALUES(city),
+                        state = VALUES(state),
+                        country = VALUES(country),
+                        source = VALUES(source);
+                    """
 
-                    rows_to_insert.append(row_tuple)
-                    inserted += 1
-
-            insert_query = """
-                INSERT INTO yellow_pages (
-                    name, address, area, number, mail, category,
-                    pincode, city, state, country
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-
-            cursor.executemany(insert_query, rows_to_insert)
-            connection.commit()
+                    cursor.executemany(insert_query, chunk_data)
+                    connection.commit()
 
     except Error as e:
-        print("Error:", e)
+        print(f"Error uploading data inside the yellow_pages table:, {e}")
         return jsonify({
             "status": "error",
-            "message": "Database insert failed or CSV format invalid"
+            "message": f"Database error:{e}"
         }), 400
-
+    except Exception as e:
+        return jsonify({
+            "status":"error",
+            "message":f"Processing Error: {e}"
+        }),500
     finally:
         if connection and connection.is_connected():
             connection.close()
@@ -611,10 +751,11 @@ def upload_google_data():
                     continue   
                 currFile_chunks = pd.read_csv(file,chunksize = batch_size)
                 for chunk in currFile_chunks:
+                    chunk = chunk.rename(columns=lambda c: c.replace(" ", "_"))
                     chunk_data = []
                     for row in chunk.itertuples(index=False):
                         row_tuple = (
-                        safe_get(row, 'Business Name'),
+                        safe_get(row, 'Business_Name'),
                         safe_get(row, 'Phone'),
                         safe_get(row, 'Email'),
                         safe_get(row, 'Website'),
@@ -677,6 +818,7 @@ def upload_google_data():
                         safe_get(row, 'EmbedMapCode'),
                         )   
                         chunk_data.append(row_tuple)
+                        inserted+=1
 
                     # storing the valus in the database
                     upload_google_map_data_query = '''
@@ -746,12 +888,71 @@ def upload_google_data():
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s )
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )
+                            ON DUPLICATE KEY UPDATE 
+                            phone = VALUES(phone),
+                            email = VALUES(email),
+                            website = VALUES(website),
+                            latitude = VALUES(latitude),
+                            longitude = VALUES(longitude) ,
+                            rating = VALUES(rating),
+                            review = VALUES(review),
+                            category= VALUES(category),
+                            image1= VALUES(image1),
+                            image2= VALUES(image2),
+                            image3= VALUES(image3),
+                            image4= VALUES(image4),
+                            image5= VALUES(image5),
+                            image6 = VALUES(image6),
+                            image7  = VALUES(image7),
+                            image8 = VALUES(image8) ,
+                            image9  = VALUES(image9),
+                            image10 = VALUES(image10) ,
+                            working_hour = VALUES(working_hour) ,
+                            facebook_profile = VALUES(facebook_profile) ,
+                            instagram_profile= VALUES(instagram_profile) , 
+                            linkedin_profile = VALUES(linkedin_profile) ,
+                            twitter_profile = VALUES(twitter_profile) ,
+                            source_name= VALUES(source_name),
+                            g_id = VALUES(g_id),
+                            gmaps_link  = VALUES(gmaps_link),
+                            organization_name= VALUES(organization_name) ,
+                            organization_id = VALUES(organization_id),
+                            rate_stars= VALUES(rate_stars),
+                            reviews_total_count = VALUES(reviews_total_count) ,
+                            price_policy = VALUES(price_policy) ,
+                            organization_category = VALUES(organization_category),
+                            organization_address = VALUES(organization_address) ,
+                            organization_locatedin_information = VALUES(organization_locatedin_information) ,
+                            organization_website = VALUES(organization_website) ,
+                            organization_phone_number= VALUES(organization_phone_number) ,
+                            organization_pluscode = VALUES(organization_pluscode),
+                            organization_work_time = VALUES(organization_work_time) ,
+                            organization_popular_load_times = VALUES(organization_popular_load_times) ,
+                            organiztion_latitude = VALUES(organiztion_latitude),
+                            organization_longitude = VALUES(organization_longitude),
+                            organization_short_description = VALUES(organization_short_description) ,
+                            organization_head_photo_file = VALUES(organization_head_photo_file) ,
+                            organization_head_photo_url = VALUES(organization_head_photo_url) ,
+                            organization_photos_files = VALUES(organization_photos_files) ,
+                            organizatiion_photos_urls = VALUES(organizatiion_photos_urls) ,
+                            organization_email = VALUES(organization_email),
+                            organization_facebook = VALUES(organization_facebook) ,
+                            organization_instagram = VALUES(organization_instagram) ,
+                            organization_twitter = VALUES(organization_twitter) ,
+                            organization_linkedin = VALUES(organization_linkedin) ,
+                            organization_youtube = VALUES(organization_youtube) ,
+                            organization_contacts_url = VALUES(organization_contacts_url) ,
+                            organization_yelp = VALUES(organization_yelp) ,
+                            organization_trip_advisor = VALUES(organization_trip_advisor) ,
+                            search_request = VALUES(search_request) ,
+                            share_link = VALUES(share_link) ,
+                            share_link_organization_id = VALUES(share_link_organization_id) ,
+                            embed_map_code = VALUES(embed_map_code)
                     '''
                     cursor.executemany(upload_google_map_data_query,
                         chunk_data
                     )
-                    inserted+=len(chunk_data)
                     connection.commit()
     except Error as e:
         print(f"Error uploading data inside the google_map table: {e}")
