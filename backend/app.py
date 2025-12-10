@@ -2012,7 +2012,7 @@ def upload_google_data():
     return jsonify({
     "status": "success",
     "message":f'Inserted:{inserted}'
-})
+}),200
 
             
 # amazone scrapper 
