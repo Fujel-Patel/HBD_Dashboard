@@ -1,188 +1,187 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardBody,
-  CardFooter,
   Typography,
   Button,
 } from "@material-tailwind/react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import {
+  ArchiveBoxIcon,
+  MapPinIcon,
+  TagIcon,
+  ArrowLongRightIcon,
+  ServerStackIcon,
+  GlobeAmericasIcon,
+  ChartBarIcon,
+} from "@heroicons/react/24/solid";
 import api from "../utils/Api";
- 
 
 export function Dasboard2() {
+  const [stats, setStats] = useState({
+    productCount: 0,
+    cityCount: 0,
+    categoryCount: 0,
+    loading: true,
+  });
 
-  const [productscount, setProductscount] = useState([]);
-  const [citycount, setCitycount] = useState([]);
-  const [categorycount, setCategorycount] = useState([]);
+  const staticData = {
+    totalScrapped: 1200000,
+  };
 
   useEffect(() => {
+    const fetchProductsData = async () => {
+      try {
+        const response = await api.get("/googlemap_data");
+        const products = response.data;
+
+        const uniqueCities = new Set(products.map((p) => p.city)).size;
+        const uniqueCategories = new Set(products.map((p) => p.category)).size;
+
+        setStats({
+          productCount: products.length,
+          cityCount: uniqueCities,
+          categoryCount: uniqueCategories,
+          loading: false,
+        });
+      } catch (error) {
+        console.error("error fetching products:", error);
+        setStats((prev) => ({ ...prev, loading: false }));
+      }
+    };
+
     fetchProductsData();
   }, []);
 
-  const fetchProductsData = async () => {
-    try {
-      const response = await api.get("/googlemap_data");
-      const products = response.data;
+  const DashboardCard = ({ title, value, icon: Icon, color, link, subValue }) => (
+    <Card className="relative overflow-hidden border border-gray-200 bg-gradient-to-br from-white to-gray-500/30 shadow-md transition-all hover:shadow-md hover:-translate-y-3 duration-300">
+      <CardBody className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <Typography variant="h5" color="blue-gray" className="mb-1 font-bold tracking-tight">
+              {title}
+            </Typography>
+            <Typography className="font-normal text-gray-500 text-sm">
+              {subValue || "real-time updates"}
+            </Typography>
+          </div>
+          <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${color} shadow-md`}>
+            <Icon className="h-6 w-6 text-white" />
+          </div>
+        </div>
+        
+        <div className="flex items-end justify-between mt-4">
+          <Typography variant="h2" color="blue-gray" className="font-black">
+            {stats.loading ? "..." : value?.toLocaleString()}
+          </Typography>
+          
+          {link && (
+            <Link to={link}>
+              <Button size="sm" variant="text" color="blue-gray" className="flex items-center gap-2 group hover:bg-gray-300 p-2 normal-case font-bold">
+                view report
+                <ArrowLongRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          )}
+        </div>
+      </CardBody>
+    </Card>
+  );
 
-      // Extract unique cities
-      const citys = products.map((product) => product.city);
-      const uniqueCities = [...new Set(citys)];
-      setCitycount(uniqueCities.length);
-
-      // Extract unique categories
-      const categories = products.map((product) => product.category);
-      const uniqueCategories = [...new Set(categories)];
-      setCategorycount(uniqueCategories.length);
-
-      //product counter
-      setProductscount( response.data.length);
-     
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-    };
-
- return (<>
-<div className="grid grid-cols-2 ">
-      {/* Left Section - Services */}
-      <div className="flex flex-col  pl-6">
-        {/* Service Box */}
-        <Card className="mt-6 w-96">
-       <CardBody className="p-5">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="mb-4 h-12 w-10 text-gray-900"
-        >
-       <path d="M11.25 2.25a.75.75 0 01.5 0l8.25 3.375a.75.75 0 01.5.7v11.35a.75.75 0 01-.5.7l-8.25 3.375a.75.75 0 01-.5 0l-8.25-3.375a.75.75 0 01-.5-.7V6.325a.75.75 0 01.5-.7L11.25 2.25zm.25 1.5L4.5 6.325v10.35l7 2.87 7-2.87V6.325L11.5 3.75zm-6.25 3.75l6.25 2.5v7.5l-6.25-2.5v-7.5zm7.5 2.5l6.25-2.5v7.5l-6.25 2.5v-7.5z" />
-        </svg>
-        <Typography variant="h2" color="blue-gray" className="mb-2">
-          Product Data
-        </Typography>
-        <Typography variant="h3" color="gray" className="mt-2">
-          1200000
-        </Typography>
+  return (
+    <div className="mt-10 flex w-full flex-col gap-6 min-h-screen pb-10 px-4 bg-slate-50/50">
+      
+      <Card className="relative w-full overflow-hidden border border-gray-200 bg-gradient-to-br from-white to-gray-500/30 shadow-sm">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-blue-100/30 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-48 w-48 rounded-full bg-slate-200/40 blur-3xl"></div>
+        
+        <CardBody className="flex flex-col items-center justify-center p-12 text-center z-10 relative">
+          <div className="mb-4 p-4 bg-white shadow-sm border border-gray-100 rounded-2xl">
+            <ServerStackIcon className="h-10 w-10 text-gray-900" />
+          </div>
+          <Typography variant="h1" color="blue-gray" className="mb-2 font-black tracking-tighter text-6xl">
+             {(staticData.totalScrapped + stats.productCount).toLocaleString()}
+          </Typography>
+          <Typography variant="h6" className="font-bold text-gray-400 uppercase tracking-[0.2em] text-xs">
+            total aggregated data
+          </Typography>
         </CardBody>
-        <CardFooter className="pt-0">
-        <Link to="/dashboard/productdata-report" className="inline-block">
-          <Button size="sm" variant="text" className="flex items-center gap-2" >
-            View More
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="h-4 w-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
-              />
-            </svg>
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
-
-        {/* Service Items */}
-      <Card className="mt-6 w-96">
-      <CardBody>
-        <Typography variant="h5" color="blue-gray" className="mb-2">
-          Total Area scrapped
-        </Typography>
-          <Typography variant="h3" color="gray" className="mt-2">
-          5248
-        </Typography>
-      </CardBody>
       </Card>
-      <Card className="mt-6 w-96">
-      <CardBody>
-        <Typography variant="h5" color="blue-gray" className="mb-2">
-          Total Category scrapped
-        </Typography>
-          <Typography variant="h3" color="gray" className="mt-2">
-          941
-        </Typography>
-      </CardBody>
-      </Card>
-   </div>
 
-      {/* Right Section - Listings */}
-      <div className="flex flex-col ">
-        {/* Product Box */}
-        <Card className="mt-6 w-96">
-      <CardBody className="p-5">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="mb-4 h-12 w-10 text-gray-900"
-        >
-       <path d="M11.25 2.25a.75.75 0 01.5 0l8.25 3.375a.75.75 0 01.5.7v11.35a.75.75 0 01-.5.7l-8.25 3.375a.75.75 0 01-.5 0l-8.25-3.375a.75.75 0 01-.5-.7V6.325a.75.75 0 01.5-.7L11.25 2.25zm.25 1.5L4.5 6.325v10.35l7 2.87 7-2.87V6.325L11.5 3.75zm-6.25 3.75l6.25 2.5v7.5l-6.25-2.5v-7.5zm7.5 2.5l6.25-2.5v7.5l-6.25 2.5v-7.5z" />
-        </svg>
-        <Typography variant="h2" color="blue-gray" className="mb-2">
-          Listing Data
-        </Typography>
-        <Typography variant="h3" color="gray" className="mt-2">
-          {productscount}
-        </Typography>
-      </CardBody>
-      <CardFooter className="pt-0">
-        <Link to="/dashboard/listingdata-report" className="inline-block">
-          <Button size="sm" variant="text" className="flex items-center gap-2">
-            View More
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="h-4 w-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
-              />
-            </svg>
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
-
-        {/* listing Items */}
-       <Card className="mt-6 w-96">
-      <CardBody>
-        <Typography variant="h5" color="blue-gray" className="mb-2">
-          Total Area scrapped
-        </Typography>
-        <Typography variant="h3" color="gray" className="mt-2">
-          {citycount}
-        </Typography>
-      </CardBody>
-      </Card> 
-       <Card className="mt-6 w-96">
-      <CardBody>
-        <Typography variant="h5" color="blue-gray" className="mb-2">
-          Total Category scrapped
-        </Typography>
-        <Typography variant="h3" color="gray" className="mt-2">
-          {categorycount}
-        </Typography>
-      </CardBody>
-      </Card> 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DashboardCard
+          title="Cities Scrapped"
+          value={stats.cityCount}
+          icon={MapPinIcon}
+          color="from-gray-400 to-gray-600"
+          link="/dashboard/cities-report"
+        />
+        <DashboardCard
+          title="Categories Scrapped"
+          value={stats.categoryCount}
+          icon={TagIcon}
+          color="from-gray-400 to-gray-600"
+          link="/dashboard/categories-report"
+        />
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DashboardCard
+          title="Product Data"
+          subValue="global historical records"
+          value={staticData.totalScrapped}
+          icon={GlobeAmericasIcon}
+          color="from-gray-400 to-gray-600"
+          link="/dashboard/productdata-report"
+        />
+
+        <DashboardCard
+          title="Listing Data"
+          subValue="live google maps api"
+          value={stats.productCount}
+          icon={ArchiveBoxIcon}
+          color="from-gray-400 to-gray-600"
+          link="/dashboard/listingdata-report"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border border-gray-200 bg-gradient-to-br from-white to-gray-500/30">
+          <CardBody className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <ChartBarIcon className="h-5 w-5 text-green-600" />
+              </div>
+              <Typography className="font-bold text-gray-700">total categories</Typography>
+            </div>
+            <Typography variant="h4" color="blue-gray" className="font-black">
+              {stats.categoryCount}
+            </Typography>
+          </CardBody>
+        </Card>
+
+        <Card className="border border-gray-200 bg-gradient-to-br from-white to-gray-500/30">
+          <CardBody className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <ChartBarIcon className="h-5 w-5 text-green-600" />
+              </div>
+              <Typography className="font-bold text-gray-700">total areas</Typography>
+            </div>
+            <Typography variant="h4" color="blue-gray" className="font-black">
+              {stats.cityCount}
+            </Typography>
+          </CardBody>
+        </Card>
+      </div>
+
+      <footer className="mt-auto pt-8 border-t border-gray-200 text-center md:text-left">
+        <Typography variant="small" className="font-medium text-gray-400">
+          &copy; {new Date().getFullYear()} scrapemaster dashboard. all rights reserved.
+        </Typography>
+      </footer>
     </div>
-    
-    </>
   );
 }
 
 export default Dasboard2;
-
-
-

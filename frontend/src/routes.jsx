@@ -13,31 +13,31 @@ import {
   DocumentTextIcon,
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/solid";
-// import { Home, Profile, Tables, Notifications } from "@/pages/dashboard";
-import {Home} from "./pages/dashboard/home";
+
+import { Home } from "./pages/dashboard/home";
 import { Profile } from "./pages/dashboard/profile";
 import { Tables } from "./pages/dashboard/tables";
 import { Notifications } from "./pages/dashboard/notifications";
-// import { SignUp } from "./pages/auth/sign-up";
-// import { SignIn } from "./pages/auth/sign-in";
+
+// IMPORT: Loading your cities report component
+import CitiesReports from "./componunts/Reports/cities_reports";
+
 import BusinessCategory from "./componunts/masterdata/BusinessCategory";
 import ServiceCategory from "./componunts/masterdata/ServiceCategory";
 import ProductCategory from "./componunts/masterdata/ProductCategory";
-import ListingComplate from "./componunts/listing master data/ListingComplate";
+import ListingComplete from "./componunts/listing master data/ListingComplate";
 import ListingIncomplate from "./componunts/listing master data/ListingIncomplate";
-import ProductComplate from "./componunts/product master data/ProductComplate";
+import ProductComplete from "./componunts/product master data/ProductComplate";
 import ProductIncomplate from "./componunts/product master data/ProductIncomplate";
 import ServiceComplate from "./componunts/service master data/ServiceComplate";
 import ServiceIncomplate from "./componunts/service master data/ServiceIncomplate";
 import GoogleMapScrapper from "./componunts/scrapper/GoogleMapScrapper";
-// import ItemDataImport from "./componunts/data import/ItemDataImport";
 import ProductDataImport from "./componunts/data import/ProductDataImport";
 import Dasboard2 from "./componunts/Dasboard2";
 import ListingDataReport from "./componunts/ListingDataReport";
 import ProductDataReport from "./componunts/ProductDataReport";
 import MisReportTable from "./componunts/Misreport";
 import ListingDataImport from "./componunts/data import/ListingDataImport";
-import { element } from "prop-types";
 import AmazonScraper from "./componunts/scrapper/AmazonScrapper";
 import DuplicateData from "./componunts/listing master data/DuplicateData";
 import OthersDataImport from "./componunts/data import/OthersDataImport";
@@ -47,8 +47,6 @@ import State from "./componunts/masterdata/location msater/State";
 import Country from "./componunts/masterdata/location msater/Country";
 import Area from "./componunts/masterdata/location msater/Area";
 import City from "./componunts/masterdata/location msater/City";
-import ListingComplete from "./componunts/listing master data/ListingComplate";
-import ProductComplete from "./componunts/product master data/ProductComplate";
 import GoogleData from "./componunts/listing master data/GoogleData";
 import GoogleMapData from "./componunts/listing master data/GoogleMapData";
 import CollegeDuniaData from "./componunts/listing master data/CollegeDuniaData";
@@ -75,8 +73,6 @@ import GoogleMapUploader from "./componunts/data import/GoogleMapUploader";
 import JustdialUploader from "./componunts/data import/JustdialUploader";
 import FreelistingUploader from "./componunts/data import/FreelistingUploader";
 import PostOfficeUploader from "./componunts/data import/PostOfficeUploader";
-import ShikshaUploader from "./componunts/data import/ShikshaUploader";
-import MagicPinUploader from "./componunts/data import/MagicPinUploader";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -93,14 +89,20 @@ export const routes = [
         element: <Home />,
       },
       {
-        path:"/listingdata-report",
-        element: <MisReportTable ></MisReportTable>, 
-        hidden: true, // Hide this from the sidebar
+        path: "/listingdata-report",
+        element: <MisReportTable />,
+        hidden: true,
       },
       {
-        path:"/productdata-report",
-        element: <ProductDataReport />, 
-        hidden: true, // Hide this from the sidebar
+        path: "/productdata-report",
+        element: <ProductDataReport />,
+        hidden: true,
+      },
+      {
+        // ROUTE: This maps the dashboard button to your new page
+        path: "/cities-report",
+        element: <CitiesReports />,
+        hidden: true,
       },
       {
         icon: <HomeIcon {...icon} />,
@@ -124,124 +126,106 @@ export const routes = [
             children: [
               {
                 icon: <DocumentTextIcon {...icon} />,
-                name: "Google",
-                path: "/data-imports/listing-data/google-map",
-                element: <GoogleUploader />, // Placeholder for Listing Data Report page
-              },{
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Asklaila",  
-                path: "/data-imports/listing-data/asklaila",
-                element: <AsklailaUploader />, // Placeholder for Listing Data Uploader page
-              },{
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Pinda",  
-                path: "/data-imports/listing-data/pinda",
-                element: <PindaUploader />, // Placeholder for Listing Data Uploader page
-              },{
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Atm",  
-                path: "/data-imports/listing-data/atm",
-                element: <AtmUploader />, // Placeholder for Listing Data Uploader page
-              },{
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Bank",  
-                path: "/data-imports/listing-data/bank-data",
-                element: <BankDataUploader />, // Placeholder for Listing Data Uploader page
-              },{
-                icon: <DocumentTextIcon {...icon} />,
-                name: "College Dunia",  
-                path: "/data-imports/listing-data/college-dunia",
-                element: <CollegeDuniaUploader />, // Placeholder for Listing Data Uploader page
-              },
-              {
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Heyplaces",  
-                path: "/data-imports/listing-data/Heyplaces",
-                element: <HeyPlacesUploader />, // Placeholder for Listing Data Uploader page
-              },
-              {
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Yellow Pages",  
-                path: "/data-imports/listing-data/yellowpages",
-                element: <YellowPagesUploader />, // Placeholder for Listing Data Uploader page
-              }, {
-                icon: <DocumentTextIcon {...icon} />,
                 name: "Asklaila",
                 path: "/data-imports/listing-data/asklaila",
-                element: <AsklailaUploader />, // Placeholder for Listing Data Uploader page
-              },{
+                element: <AsklailaUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Pinda",
+                path: "/data-imports/listing-data/pinda",
+                element: <PindaUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Atm",
+                path: "/data-imports/listing-data/atm",
+                element: <AtmUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Bank",
+                path: "/data-imports/listing-data/bank-data",
+                element: <BankDataUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "College Dunia",
+                path: "/data-imports/listing-data/college-dunia",
+                element: <CollegeDuniaUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Heyplaces",
+                path: "/data-imports/listing-data/Heyplaces",
+                element: <HeyPlacesUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Yellow Pages",
+                path: "/data-imports/listing-data/yellowpages",
+                element: <YellowPagesUploader />,
+              },
+              {
                 icon: <DocumentTextIcon {...icon} />,
                 name: "JustDial",
                 path: "/data-imports/listing-data/justdial",
-                element: <JustdialUploader />, // Placeholder for Listing Data Uploader page
-              },{
+                element: <JustdialUploader />,
+              },
+              {
                 icon: <DocumentTextIcon {...icon} />,
                 name: "PO India",
-                patch: "/data-imports/listing-data/po-india",
-                element: <PostOfficeUploader />, // Placeholder for Listing Data Uploader page
-              },{
+                path: "/data-imports/listing-data/po-india",
+                element: <PostOfficeUploader />,
+              },
+              {
                 icon: <DocumentTextIcon {...icon} />,
                 name: "Near Buy",
-                patch: "/data-imports/listing-data/near-buy",
-                element: <NearbuyUploader />, // Placeholder for Listing Data Uploader page
-              },{
+                path: "/data-imports/listing-data/near-buy",
+                element: <NearbuyUploader />,
+              },
+              {
                 icon: <DocumentTextIcon {...icon} />,
                 name: "SchoolGis",
-                patch: "/data-imports/listing-data/school-gis",
-                element: <SchoolgisUploader />, // Placeholder for Listing Data Uploader page
+                path: "/data-imports/listing-data/school-gis",
+                element: <SchoolgisUploader />,
               },
               {
                 icon: <DocumentTextIcon {...icon} />,
-                name: "Google Map Scrap Data",  
+                name: "Google Map",
                 path: "/data-imports/listing-data/googlemap-scrap",
-                element: <GoogleMapUploader />, // Placeholder for Listing Data Uploader page
+                element: <GoogleMapUploader />,
               },
               {
                 icon: <DocumentTextIcon {...icon} />,
-                name: "Justdial",  
-                path: "/data-imports/listing-data/justdial",
-                element: <JustdialUploader />, // Placeholder for Listing Data Uploader page
-              },
-              {
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Freelisting",  
+                name: "Freelisting",
                 path: "/data-imports/listing-data/freelisting",
-                element: <FreelistingUploader />, // Placeholder for Listing Data Uploader page
+                element: <FreelistingUploader />,
               },
               {
                 icon: <DocumentTextIcon {...icon} />,
-                name: "Post Offices",  
+                name: "Post Offices",
                 path: "/data-imports/listing-data/postoffice",
-                element: <PostOfficeUploader />, // Placeholder for Listing Data Uploader page
+                element: <PostOfficeUploader />,
               },
-              {
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Shiksha",  
-                path: "/data-imports/listing-data/shiksha",
-                element: <ShikshaUploader />, // Placeholder for Listing Data Uploader page
-              },
-              {
-                icon: <DocumentTextIcon {...icon} />,
-                name: "Magic Pin",  
-                path: "/data-imports/listing-data/magicpin",
-                element: <MagicPinUploader />, // Placeholder for Listing Data Uploader page
-              },
-            ]
-          },{
+            ],
+          },
+          {
             icon: <DocumentTextIcon {...icon} />,
             name: "Product Data",
             path: "/data-imports/product-data",
-            element: <ProductDataImport />, // Placeholder for Product Data page
-          },{
+            element: <ProductDataImport />,
+          },
+          {
             icon: <DocumentTextIcon {...icon} />,
             name: "Others Data",
             path: "/data-imports/others-data",
-            element: <OthersDataImport />, // Placeholder for Listing Data page
-          }
-        ] 
+            element: <OthersDataImport />,
+          },
+        ],
       },
       {
-        icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
+        icon: <TableCellsIcon {...icon} />,
         name: "Master data",
         children: [
           {
@@ -252,33 +236,33 @@ export const routes = [
                 icon: <TableCellsIcon {...icon} />,
                 name: "Country",
                 path: "/masterdata/location/country",
-                element:<Country />,
+                element: <Country />,
               },
               {
                 icon: <TableCellsIcon {...icon} />,
                 name: "State",
                 path: "/masterdata/location/state",
-                element:<State />,
+                element: <State />,
               },
               {
                 icon: <TableCellsIcon {...icon} />,
                 name: "City",
                 path: "/masterdata/location/city",
-                element:<City />,
+                element: <City />,
               },
               {
                 icon: <TableCellsIcon {...icon} />,
                 name: "Area",
                 path: "/masterdata/location/area",
-                element:<Area />,
+                element: <Area />,
               },
-            ]
+            ],
           },
           {
             icon: <TableCellsIcon {...icon} />,
             name: "Business Category",
             path: "/masterdata/business-category",
-            element:<BusinessCategory />,
+            element: <BusinessCategory />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
@@ -291,122 +275,111 @@ export const routes = [
             name: "Product Category",
             path: "/masterdata/product-category",
             element: <ProductCategory />,
-          }
-        ]},
+          },
+        ],
+      },
       {
         icon: <TableCellsIcon {...icon} />,
         name: "Listing Master Data",
         children: [
           {
-            icon:<CheckCircleIcon {...icon} />,
+            icon: <CheckCircleIcon {...icon} />,
             name: "Complete Data",
             path: "listing-master-data/complete-data",
-            element: <ListingComplete/>,
-         },{
-          icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
-          name: "Magicpin",
-            path: "listing-master-data/magicpin-data",    
-          element:<MagicPinData/>
-
-          },
-           {
-             icon: <XCircleIcon {...icon} />,
-             name: "Google Data",
-             path: "listing-master-data/google-data",            
-             element:<GoogleData/>
-      },
-      {
-          icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
-          name: "Google Maps",
-        path: "listing-master-data/googlemap-data", 
-          element:<GoogleMapData/>
-
+            element: <ListingComplete />,
           },
           {
-          icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
-          name: "Atm",
-            path: "listing-master-data/atm-data",   
-          element:<AtmData/>
-
-         },{
-          icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
-          name: "Bank Data",
-          path: "listing-master-data/bank-data",            
-
-         },{
-          icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
-          name: "College Dunia",
-            path: "listing-master-data/collegedunia-data", 
-          element:<CollegeDuniaData/>
-
-         },{
-          icon: <TableCellsIcon {...icon} />, // <-- Changed to TableCellsIcon for data representation
-          name: "Heyplaces",
-          path: "listing-master-data/heyplaces-data",            
-
-         },
-        //   {
-        //     icon: <XCircleIcon {...icon} />,
-        //     name: "Incomplete Data",
-        //     path: "listing-master-data/incomplete-data",                 -----> Hidden for Testing
-        //     element: <ListingIncomplate/>,
-        //  },                                                
-        //   {
-        //     icon: <XCircleIcon {...icon} />,
-        //     name: "Duplicate Data",
-        //     path: "listing-master-data/duplicate-data",                  -----> Hidden for Testing
-        //     element: <DuplicateData/>,
-        //   },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "Zomato Data",
-          path: "listing-master-data/zomato-data",            
-            element:"",
+            icon: <TableCellsIcon {...icon} />,
+            name: "Magicpin",
+            path: "listing-master-data/magicpin-data",
+            element: <MagicPinData />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "Asklaila Data",
-          path: "listing-master-data/asklaila-data",            
-          element:<AsklailaData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Google Data",
+            path: "listing-master-data/google-data",
+            element: <GoogleData />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "JustDial Data",
-          path: "listing-master-data/justdial-data",            
-          element:<JustDialData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Google Maps",
+            path: "listing-master-data/googlemap-data",
+            element: <GoogleMapData />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "PO India Data",
-          path: "listing-master-data/poindia-data",            
-          element:<POIndiaData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Atm",
+            path: "listing-master-data/atm-data",
+            element: <AtmData />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "Near Buy Data",
-          path: "listing-master-data/nearbuy-data",            
-          element:<NearBuyData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Bank Data",
+            path: "listing-master-data/bank-data",
+            element: <BankDataUploader />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "SchoolGis Data",
-          path: "listing-master-data/schoolgis-data",            
-          element:<SchoolgisData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "College Dunia",
+            path: "listing-master-data/collegedunia-data",
+            element: <CollegeDuniaData />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "Yellow Pages Data",
-          path: "listing-master-data/yellowpages-data",            
-          element:<YellowPagesData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Heyplaces",
+            path: "listing-master-data/heyplaces-data",
+            element: <HeyPlacesUploader />,
           },
-        {
-          icon: <TableCellsIcon {...icon} />,
-          name: "Pinda Data",
-          path: "listing-master-data/pinda-data",            
-          element:<PindaData/>,
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Zomato Data",
+            path: "listing-master-data/zomato-data",
+            element: "",
           },
-
-        ]},
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Asklaila Data",
+            path: "listing-master-data/asklaila-data",
+            element: <AsklailaData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "JustDial Data",
+            path: "listing-master-data/justdial-data",
+            element: <JustDialData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "PO India Data",
+            path: "listing-master-data/poindia-data",
+            element: <POIndiaData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Near Buy Data",
+            path: "listing-master-data/nearbuy-data",
+            element: <NearBuyData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "SchoolGis Data",
+            path: "listing-master-data/schoolgis-data",
+            element: <SchoolgisData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Yellow Pages Data",
+            path: "listing-master-data/yellowpages-data",
+            element: <YellowPagesData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Pinda Data",
+            path: "listing-master-data/pinda-data",
+            element: <PindaData />,
+          },
+        ],
+      },
       {
         icon: <TableCellsIcon {...icon} />,
         name: "Product Master Data",
@@ -415,17 +388,23 @@ export const routes = [
             icon: <CheckCircleIcon {...icon} />,
             name: "Complete Data",
             path: "product-master-data/complete-data",
-            element:<ProductComplete/>,
-         },
+            element: <ProductComplete />,
+          },
           {
             icon: <XCircleIcon {...icon} />,
             name: "Incomplete Data",
             path: "product-master-data/incomplete-data",
-            element: <ProductIncomplate/>,
-         },
+            element: <ProductIncomplate />,
+          },
+         {
+          icon: <TableCellsIcon {...icon} />,
+          name: "Amazon Data",
+          path: "product-master-data/amazon-data",
+          element: "ProductAmazonData",
+         }
         ]
       },
-    {
+      {
         icon: <TableCellsIcon {...icon} />,
         name: "Service Master Data",
         children: [
@@ -433,39 +412,39 @@ export const routes = [
             icon: <CheckCircleIcon {...icon} />,
             name: "Complete Data",
             path: "service-master-data/complete-data",
-            element: <ServiceComplate/>,
-         },
+            element: <ServiceComplate />,
+          },
           {
             icon: <XCircleIcon {...icon} />,
             name: "Incomplete Data",
             path: "service-master-data/incomplete-data",
-            element: <ServiceIncomplate/>,
-         },
-        ]
-    },
+            element: <ServiceIncomplate />,
+          },
+        ],
+      },
       {
-        icon:<MagnifyingGlassIcon {...icon} />,
+        icon: <MagnifyingGlassIcon {...icon} />,
         name: "Scrapper",
         children: [
           {
-            icon:  <MapPinIcon {...icon} />,
+            icon: <MapPinIcon {...icon} />,
             name: "Google Map",
             path: "/scrapper/google-map",
             element: <GoogleMapScrapper />,
           },
           {
-            icon:  <ShoppingCartIcon {...icon} />,
+            icon: <ShoppingCartIcon {...icon} />,
             name: "Amazon",
-            path:"/scrapper/amazon",
-            element:<AmazonScraper/>
+            path: "/scrapper/amazon",
+            element: <AmazonScraper />,
           },
           {
-            icon:  <ShoppingCartIcon {...icon} />,
+            icon: <ShoppingCartIcon {...icon} />,
             name: "D-mart",
-            path:"/scrapper/dmart",
-            element:<DmartScrapper/>
-          }
-        ]
+            path: "/scrapper/dmart",
+            element: <DmartScrapper />,
+          },
+        ],
       },
       {
         icon: <UserCircleIcon {...icon} />,
@@ -487,8 +466,6 @@ export const routes = [
       },
     ],
   },
-
-  
 ];
 
 export default routes;
