@@ -396,9 +396,6 @@ export const routes = [
             path: "product-master-data/incomplete-data",
             element: <ProductIncomplate />,
           },
-        ],
-            element: <ProductIncomplate/>,
-         },
          {
           icon: <TableCellsIcon {...icon} />,
           name: "Amazon Data",
