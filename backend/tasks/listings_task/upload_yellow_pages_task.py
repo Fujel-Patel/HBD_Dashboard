@@ -1,4 +1,4 @@
-from services.csv_uploaders.upload_yellow_pages import upload_yellow_pages_data
+from services.csv_uploaders_listing.upload_yellow_pages import upload_yellow_pages_data
 from celery_app import celery
 import os
 

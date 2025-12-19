@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify,Blueprint
-from tasks.listings_task.upload_google_map_scape_task import process_google_map_scrape_task
-from explains.utils import secure_filename  
+from tasks.listings_task.upload_google_map_scrape_task import process_google_map_scrape_task
+from werkzeug.utils import secure_filename
 import os 
 
 google_map_scrape_bp = Blueprint('google_map_scrape_bp',__name__)

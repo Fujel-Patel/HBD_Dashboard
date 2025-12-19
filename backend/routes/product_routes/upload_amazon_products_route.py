@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify,Blueprint
 from tasks.products_task.upload_amazon_products_task import process_amazon_products_task
-from explains.utils import secure_filename  
+from werkzeug.utils import secure_filename
 import os 
 
 UPLOAD_DIR = "tmp/uploads/amazon_products"

@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify,Blueprint
-from tasks.listings_task.upload_justdial import process_justdial_task
-from explains.utils import secure_filename  
+from tasks.listings_task.upload_justdial_task import process_justdial_task
+from werkzeug.utils import secure_filename  
 import os 
 
 UPLOAD_DIR = "tmp/uploads/justdial"

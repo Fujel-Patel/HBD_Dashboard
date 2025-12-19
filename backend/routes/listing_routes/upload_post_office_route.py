@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify,Blueprint
 from tasks.listings_task.upload_post_office_task import process_post_office_task
-from explains.utils import secure_filename  
+from werkzeug.utils import secure_filename 
 import os 
 
 UPLOAD_DIR = "tmp/uploads/post_office"

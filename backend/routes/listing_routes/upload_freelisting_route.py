@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify,Blueprint
 from tasks.listings_task.upload_freelisting_task import process_freelisting_task
-from explains.utils import secure_filename  
+from werkzeug.utils import secure_filename
 import os 
 
 freelisting_bp = Blueprint('freelisting_bp',__name__)

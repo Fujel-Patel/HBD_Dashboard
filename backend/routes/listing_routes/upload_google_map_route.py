@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify,Blueprint
 from tasks.listings_task.upload_google_map_task import process_google_map_task
-from explains.utils import secure_filename  
+from werkzeug.utils import secure_filename
 import os 
 
 UPLOAD_DIR = "tmp/uploads/google_map"

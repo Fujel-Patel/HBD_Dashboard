@@ -1,31 +1,39 @@
 from flask import Blueprint,request,jsonify
 from tasks.listings_task.upload_shiksha_task import process_shiksha_task
-from explains.utils import secure_filename  
+from werkzeug.utils import secure_filename 
 import os
+from utils.storage import get_upload_base_dir
 
 shiksha_bp = Blueprint('shiksha_bp',__name__)
 
-UPLOAD_DIR = "tmp/uploads/shiksha"
-os.makedirs(UPLOAD_DIR,exist_ok=True)
-
-@shiksha_bp.route("/upload/shiksha-data",methods=["POST"])
+@shiksha_bp.route("/upload/shiksha-data", methods=["POST"])
 def upload_shiksha_route():
-    files = request.files.getlist("file")
-    if not files:
-        return jsonify({"error":"No files provided"}),400
-    paths = []
-    for f in files:
-        file_name = secure_filename(f.filename)
-        file_path = os.path.join(UPLOAD_DIR,file_name)
-        f.save(file_path)
-        paths.append(file_path)
     try:
+        files = request.files.getlist("files")
+        print("FILES RECEIVED:", files)
+
+        if not files:
+            return jsonify({"error": "No files provided"}), 400
+
+        UPLOAD_DIR = get_upload_base_dir()/"shiksha"
+        UPLOAD_DIR.mkdir(parents=True,exist_ok=True)
+        paths = []
+        for f in files:
+            filename = secure_filename(f.filename)
+            filepath = UPLOAD_DIR/filename
+            f.save(filepath)
+            paths.append(str(filepath))
+
+        print("SAVED PATHS:", paths)
+
         task = process_shiksha_task.delay(paths)
+
         return jsonify({
-            "status":"files_accepted",
-            "task_id":task.id
-            }),202
+            "status": "files_accepted",
+            "task_id": task.id
+        }), 202
+
     except Exception as e:
-        return jsonify({
-            "error":str(e)
-        }),500
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
