@@ -3,7 +3,7 @@ import {
   UserCircleIcon,
   TableCellsIcon,
   InformationCircleIcon,
-  ServerStackIcon,
+  ServerStackIcon, // This was already here, good.
   RectangleStackIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
@@ -31,7 +31,9 @@ import ListingIncomplate from "./componunts/listing master data/ListingIncomplat
 import ProductComplete from "./componunts/product master data/ProductComplate";
 import ProductIncomplate from "./componunts/product master data/ProductIncomplate";
 
-// --- NEW IMPORT ADDED HERE ---
+// --- FIXED IMPORT: Pointing to the file you created in widgets/layout ---
+import { ScraperManager } from "./widgets/layout/Scrapper-manager"; 
+
 import AmazonData from "./componunts/product master data/AmazonData"; 
 import FlipkartData from "./componunts/product master data/FlipkartData";
 import BigBasketData from "./componunts/product master data/BigBasket";
@@ -464,6 +466,14 @@ export const routes = [
           },
         ],
       },
+      // --- CORRECTED SECTION START ---
+      {
+        icon: <ServerStackIcon {...icon} />, 
+        name: "Scraper Manager",
+        path: "/scrapper-manager", // Ensure lowercase path for consistency
+        element: <ScraperManager />, 
+      },
+      // --- CORRECTED SECTION END ---
       {
         icon: <MagnifyingGlassIcon {...icon} />,
         name: "Scrapper",
