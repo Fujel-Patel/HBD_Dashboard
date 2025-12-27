@@ -3,7 +3,7 @@ import {
   UserCircleIcon,
   TableCellsIcon,
   InformationCircleIcon,
-  ServerStackIcon,
+  ServerStackIcon, // <--- 1. Added Icon for Manager
   RectangleStackIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
@@ -18,11 +18,13 @@ import { Home } from "./pages/dashboard/home";
 import { Profile } from "./pages/dashboard/profile";
 import { Tables } from "./pages/dashboard/tables";
 import { Notifications } from "./pages/dashboard/notifications";
-import ZomatoData from "./componunts/listing master data/ZomatoData";
+import ZomatoData from "./componunts/product master data/ZomatoData";
 import CitiesReports from "./componunts/Reports/cities_reports";
 import CategoriesReports from "./componunts/Reports/categories_reports";
 import BusinessCategory from "./componunts/masterdata/BusinessCategory";
 import ServiceCategory from "./componunts/masterdata/ServiceCategory";
+import HeyPlacesData from "./componunts/listing master data/HeyPlacesData.jsx";
+import BankData from "./componunts/listing master data/BankData";
 import ProductCategory from "./componunts/masterdata/ProductCategory";
 import ListingComplete from "./componunts/listing master data/ListingComplate";
 import ListingIncomplate from "./componunts/listing master data/ListingIncomplate";
@@ -31,18 +33,22 @@ import ProductIncomplate from "./componunts/product master data/ProductIncomplat
 
 // --- NEW IMPORT ADDED HERE ---
 import AmazonData from "./componunts/product master data/AmazonData"; 
-
+import FlipkartData from "./componunts/product master data/FlipkartData";
+import BigBasketData from "./componunts/product master data/BigBasket";
 import ServiceComplate from "./componunts/service master data/ServiceComplate";
 import ServiceIncomplate from "./componunts/service master data/ServiceIncomplate";
 import GoogleMapScrapper from "./componunts/scrapper/GoogleMapScrapper";
-import ProductDataImport from "./componunts/data import/ProductDataImport";
-import Dasboard2 from "./componunts/Dasboard2";
+// import ProductDataImport from "./componunts/data import/listing import/ProductDataImport";
+import CleanListingMaster from "./componunts/clean master data/CleanListingMaster";
+import CleanProductMaster from "./componunts/clean master data/CleanProductMaster";
+import ListingCategory from "./componunts/masterdata/ListingCategory";
+import ReportDashboard from "./componunts/ReportDashboard";
 import ListingDataReport from "./componunts/ListingDataReport";
 import ProductDataReport from "./componunts/ProductDataReport";
 import MisReportTable from "./componunts/Misreport";
-import ListingDataImport from "./componunts/data import/ListingDataImport";
+// import ListingDataImport from "./componunts/data import/ListingDataImport";
 import AmazonScraper from "./componunts/scrapper/AmazonScrapper";
-import DuplicateData from "./componunts/listing master data/DuplicateData";
+// import DuplicateData from "./componunts/listing master data/DuplicateData";
 import OthersDataImport from "./componunts/data import/OthersDataImport";
 import SearchKeyword from "./componunts/SearchKeyword";
 import DmartScrapper from "./componunts/scrapper/DmartScrapper";
@@ -50,7 +56,7 @@ import State from "./componunts/masterdata/location msater/State";
 import Country from "./componunts/masterdata/location msater/Country";
 import Area from "./componunts/masterdata/location msater/Area";
 import City from "./componunts/masterdata/location msater/City";
-import GoogleData from "./componunts/listing master data/GoogleData";
+import GoogleData from "./componunts/listing master data/ShikshaData";
 import GoogleMapData from "./componunts/listing master data/GoogleMapData";
 import CollegeDuniaData from "./componunts/listing master data/CollegeDuniaData";
 import MagicPinData from "./componunts/listing master data/MagicPinData";
@@ -62,20 +68,48 @@ import NearBuyData from "./componunts/listing master data/NearBuyData";
 import SchoolgisData from "./componunts/listing master data/SchoolgisData";
 import YellowPagesData from "./componunts/listing master data/YellowPagesData";
 import PindaData from "./componunts/listing master data/PindaData";
-import GoogleUploader from "./componunts/data import/GoogleUploader";
-import BankDataUploader from "./componunts/data import/BankDataUploader";
-import CollegeDuniaUploader from "./componunts/data import/CollegeDuniaUploader";
-import HeyPlacesUploader from "./componunts/data import/HeyPlacesUploader";
-import AtmUploader from "./componunts/data import/AtmUploader";
-import AsklailaUploader from "./componunts/data import/AsklailaUploader";
-import PindaUploader from "./componunts/data import/PindaUploader";
-import YellowPagesUploader from "./componunts/data import/YellowPagesUploader";
-import SchoolgisUploader from "./componunts/data import/SchoolgisUploader";
-import NearbuyUploader from "./componunts/data import/NearbuyUploader";
-import GoogleMapUploader from "./componunts/data import/GoogleMapUploader";
-import JustdialUploader from "./componunts/data import/JustdialUploader";
-import FreelistingUploader from "./componunts/data import/FreelistingUploader";
-import PostOfficeUploader from "./componunts/data import/PostOfficeUploader";
+import GoogleUploader from "./componunts/data import/listing import/GoogleUploader";
+import BankDataUploader from "./componunts/data import/listing import/BankDataUploader";
+import CollegeDuniaUploader from "./componunts/data import/listing import/CollegeDuniaUploader";
+import HeyPlacesUploader from "./componunts/data import/listing import/HeyPlacesUploader";
+import AtmUploader from "./componunts/data import/listing import/AtmUploader";
+import AsklailaUploader from "./componunts/data import/listing import/AsklailaUploader";
+import PindaUploader from "./componunts/data import/listing import/PindaUploader";
+import YellowPagesUploader from "./componunts/data import/listing import/YellowPagesUploader";
+import SchoolgisUploader from "./componunts/data import/listing import/SchoolgisUploader";
+import NearbuyUploader from "./componunts/data import/listing import/NearbuyUploader";
+import GoogleMapUploader from "./componunts/data import/listing import/GoogleMapUploader";
+import JustdialUploader from "./componunts/data import/listing import/JustdialUploader";
+import FreelistingUploader from "./componunts/data import/listing import/FreelistingUploader";
+import PostOfficeUploader from "./componunts/data import/listing import/PostOfficeUploader";
+import ShikshaUploader from "./componunts/data import/listing import/ShikshaUploader";
+import DuplicateData from "./componunts/listing master data/DuplicateData";
+import ShikshaData from "./componunts/listing master data/ShikshaData";
+import FlipkartScrapper from "./componunts/scrapper/FlipkartScrapper";
+import IndiamartScrapper from "./componunts/scrapper/IndiamartScrapper";
+import BlinkitScrapper from "./componunts/scrapper/BlinkitScrapper";
+import ZeptoScrapper from "./componunts/scrapper/ZeptoScrapper";
+import JiomartScrapper from "./componunts/scrapper/JiomartScrapper";
+import ZomatoScrapper from "./componunts/scrapper/ZomatoScrapper";
+import BigbasketScrapper from "./componunts/scrapper/BigbasketScrapper";
+import JioMartData from "./componunts/product master data/JioMart";
+import DmartData from "./componunts/product master data/DMart";
+import ZeptoData from "./componunts/product master data/Zepto";
+import BlinkIt from "./componunts/product master data/BlinkIt";
+import IndiaMart from "./componunts/product master data/IndiaMart";
+import AmazonUploader from "./componunts/data import/product import/AmazonUploader";
+import BigBasketUploader from "./componunts/data import/product import/BigBasketUploader";
+import BlinkitUploader from "./componunts/data import/product import/BlinkitUploader";
+import DMartUploader from "./componunts/data import/product import/DMartuploader";
+import FlipkartUploader from "./componunts/data import/product import/FlipkartUploader";
+import IndiaMartUploader from "./componunts/data import/product import/IndiaMartUploader";
+import JioMartUploader from "./componunts/data import/product import/JioMartUploader";
+import ZeptoUploader from "./componunts/data import/product import/ZeptoUploader";
+// import ZomatoUploader from "./componunts/data import/product import/ZomatoUploader";
+
+// --- 2. Added Scraper Manager Import (Based on your previous file location) ---
+import { ScraperManager } from "./layouts/Scrapper_manager";
+import ZomatoUploader from "./componunts/data import/product import/ZomatoUploader";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -113,9 +147,9 @@ export const routes = [
       },
       {
         icon: <HomeIcon {...icon} />,
-        name: "dashboard",
+        name: "Data Report",
         path: "/home2",
-        element: <Dasboard2 />,
+        element: <ReportDashboard />,
       },
       {
         icon: <MagnifyingGlassIcon {...icon} />,
@@ -142,6 +176,12 @@ export const routes = [
                 name: "Pinda",
                 path: "/data-imports/listing-data/pinda",
                 element: <PindaUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Shiksha",
+                path: "/data-imports/listing-data/shiksha",
+                element: <ShikshaUploader />,
               },
               {
                 icon: <DocumentTextIcon {...icon} />,
@@ -181,12 +221,6 @@ export const routes = [
               },
               {
                 icon: <DocumentTextIcon {...icon} />,
-                name: "PO India",
-                path: "/data-imports/listing-data/po-india",
-                element: <PostOfficeUploader />,
-              },
-              {
-                icon: <DocumentTextIcon {...icon} />,
                 name: "Near Buy",
                 path: "/data-imports/listing-data/near-buy",
                 element: <NearbuyUploader />,
@@ -200,8 +234,14 @@ export const routes = [
               {
                 icon: <DocumentTextIcon {...icon} />,
                 name: "Google Map",
-                path: "/data-imports/listing-data/googlemap-scrap",
+                path: "/data-imports/listing-data/google-map",
                 element: <GoogleMapUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Google",
+                path: "/data-imports/listing-data/google",
+                element: <GoogleUploader />,
               },
               {
                 icon: <DocumentTextIcon {...icon} />,
@@ -218,10 +258,57 @@ export const routes = [
             ],
           },
           {
-            icon: <DocumentTextIcon {...icon} />,
+            icon: <ArrowUpTrayIcon {...icon} />,
             name: "Product Data",
-            path: "/data-imports/product-data",
-            element: <ProductDataImport />,
+            children: [
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Amazon",
+                path: "/data-imports/product-data/amazon",
+                element: <AmazonUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "BigBasket",
+                path: "/data-imports/product-data/bigbasket",
+                element: <BigBasketUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Blinkit",
+                path: "/data-imports/product-data/blinkit",
+                element: <BlinkitUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "D-Mart",
+                path: "/data-imports/product-data/d-mart",
+                element: <DMartUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Flipkart",
+                path: "/data-imports/product-data/flipkart",
+                element: <FlipkartUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "IndiaMart",
+                path: "/data-imports/product-data/india-mart",
+                element: <IndiaMartUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Jio Mart",
+                path: "/data-imports/product-data/jio-mart",
+                element: <JioMartUploader />,
+              },{
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Zepto",
+                path: "/data-imports/product-data/zepto",
+                element: <ZeptoUploader />,
+              },
+              {
+                icon: <DocumentTextIcon {...icon} />,
+                name: "Zomato",
+                path: "/data-imports/product-data/zomato",
+                element: <ZomatoUploader />,
+              }
+            ],
           },
           {
             icon: <DocumentTextIcon {...icon} />,
@@ -230,6 +317,24 @@ export const routes = [
             element: <OthersDataImport />,
           },
         ],
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
+        name: "Clean Master Data",
+        children: [
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Listing Master",
+            path: "/masterdata/clean-listing-master",
+            element: <CleanListingMaster />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Product Master",
+            path: "/masterdata/clean-product-master",
+            element: <CleanProductMaster />,
+          },
+        ],    
       },
       {
         icon: <TableCellsIcon {...icon} />,
@@ -267,6 +372,12 @@ export const routes = [
           },
           {
             icon: <TableCellsIcon {...icon} />,
+            name: "Listing Category",
+            path: "/masterdata/listing-category", // Fixed 'paht' typo from original code
+            element: <ListingCategory />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
             name: "Business Category",
             path: "/masterdata/business-category",
             element: <BusinessCategory />,
@@ -283,6 +394,12 @@ export const routes = [
             path: "/masterdata/product-category",
             element: <ProductCategory />,
           },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Duplicate Data",
+            path: "/masterdata/duplicate-data",
+            element: <DuplicateData />,
+          }
         ],
       },
       {
@@ -297,27 +414,27 @@ export const routes = [
           },
           {
             icon: <TableCellsIcon {...icon} />,
-            name: "Zomato Data",
-            path: "listing-master-data/zomato-data",
-            element: <ZomatoData />,
-          },
-          {
-            icon: <TableCellsIcon {...icon} />,
             name: "Magicpin",
             path: "listing-master-data/magicpin-data",
             element: <MagicPinData />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
-            name: "Google Data",
-            path: "listing-master-data/google-data",
-            element: <GoogleData />,
+            name: "Shiksha Data",
+            path: "listing-master-data/Shiksha-data",
+            element: <ShikshaData />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
             name: "Google Maps",
-            path: "listing-master-data/googlemap-data",
+            path: "listing-master-data/google-map-data",
             element: <GoogleMapData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Google Data",
+            path: "listing-master-data/google-data",
+            element: <GoogleData />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
@@ -329,25 +446,19 @@ export const routes = [
             icon: <TableCellsIcon {...icon} />,
             name: "Bank Data",
             path: "listing-master-data/bank-data",
-            element: <BankDataUploader />,
+            element: <BankData />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
             name: "College Dunia",
-            path: "listing-master-data/collegedunia-data",
+            path: "listing-master-data/college-dunia-data",
             element: <CollegeDuniaData />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
             name: "Heyplaces",
             path: "listing-master-data/heyplaces-data",
-            element: <HeyPlacesUploader />,
-          },
-          {
-            icon: <TableCellsIcon {...icon} />,
-            name: "Zomato Data",
-            path: "listing-master-data/zomato-data",
-            element: "",
+            element: <HeyPlacesData />,
           },
           {
             icon: <TableCellsIcon {...icon} />,
@@ -391,6 +502,12 @@ export const routes = [
             path: "listing-master-data/pinda-data",
             element: <PindaData />,
           },
+          {
+            icon: <XCircleIcon {...icon} />,
+            name: "Incomplete Data",
+            path: "listing-master-data/incomplete-data",
+            element: <ListingIncomplate />,
+          }
         ],
       },
       {
@@ -413,8 +530,55 @@ export const routes = [
             icon: <TableCellsIcon {...icon} />,
             name: "Amazon Data",
             path: "product-master-data/amazon-data",
-           
             element: <AmazonData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Flipkart Data",
+            path: "product-master-data/flipkart-data",
+            element: <FlipkartData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "BigBasket Data",
+            path: "product-master-data/bigbasket-data",
+            element: <BigBasketData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Zomato Data",
+            path: "listing-master-data/zomato-data",
+            element: <ZomatoData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Jio Mart",
+            path: "listing-master-data/jio-mart",
+            element: <JioMartData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "D-Mart Data",
+            path: "listing-master-data/D-mart-data",
+            element: <DmartData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "Zepto Data",
+            path: "listing-master-data/zepto-data",
+            element: <ZeptoData />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "BlinkIt Data",
+            path: "listing-master-data/blinkit-data",
+            element: <BlinkIt />,
+          },
+          {
+            icon: <TableCellsIcon {...icon} />,
+            name: "India Mart Data",
+            path: "listing-master-data/india-mart-data",
+            element: <IndiaMart />,
           }
         ]
       },
@@ -436,6 +600,15 @@ export const routes = [
           },
         ],
       },
+      
+      // --- 3. Scraper Manager Route Added Here ---
+      {
+        icon: <ServerStackIcon {...icon} />,
+        name: "Scraper Manager",
+        path: "/scrapper-manager",
+        element: <ScraperManager />,
+      },
+      
       {
         icon: <MagnifyingGlassIcon {...icon} />,
         name: "Scrapper",
@@ -457,6 +630,48 @@ export const routes = [
             name: "D-mart",
             path: "/scrapper/dmart",
             element: <DmartScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "Flipkart",
+            path: "/scrapper/flipkart",
+            element: <FlipkartScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "BigBasket",
+            path: "/scrapper/bigbasket",
+            element: <BigbasketScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "Zomato",
+            path: "/scrapper/zomato",
+            element: <ZomatoScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "Jio Mart",
+            path: "/scrapper/jiomart",
+            element: <JiomartScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "Zepto",
+            path: "/scrapper/zepto",
+            element: <ZeptoScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "Blinkit",
+            path: "/scrapper/blinkit",
+            element: <BlinkitScrapper />,
+          },
+          {
+            icon: <ShoppingCartIcon {...icon} />,
+            name: "India Mart",
+            path: "/scrapper/indiamart",
+            element: <IndiamartScrapper />,
           },
         ],
       },

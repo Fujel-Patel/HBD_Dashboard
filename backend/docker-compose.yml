@@ -1,10 +1,6 @@
-version: "3.9"
-
 services:
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
 
   web:
     build: .
@@ -14,7 +10,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./tmp:/app/tmp
+      - uploads:/app/tmp/uploads
     depends_on:
       - redis
 
@@ -24,6 +20,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./tmp:/app/tmp
+      - uploads:/app/tmp/uploads
     depends_on:
       - redis
+volumes:
+  uploads:

@@ -8,7 +8,7 @@ import os
 asklaila_bp = Blueprint("asklaila_bp",__name__)
 @asklaila_bp.route("/upload/asklaila-data",methods=["POST"])
 def upload_asklaila_route():
-    files = request.files.getlist("file")
+    files = request.files.getlist("files")
     if not files:
         return jsonify({"error":"No files provided"}),400
     
