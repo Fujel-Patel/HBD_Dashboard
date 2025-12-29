@@ -545,7 +545,7 @@ export const routes = [
             element: <ProductComplete />,
           },
           {
-            icon: <tableCellsIcon {...icon} />,
+            icon: <TableCellsIcon {...icon} />,
             name: "Amazon Data",
             path: "product-master-data/amazon-data",
             element: <AmazonData />,
