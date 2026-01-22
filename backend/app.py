@@ -820,7 +820,7 @@ from routes.upload_item_csv import item_csv_bp
 app.register_blueprint(item_csv_bp)
 
 # complate incomplate data
-from routes.product_routes.amazon_product import amazon_products_bp
+from routes.amazon_product import amazon_products_bp
 app.register_blueprint(amazon_products_bp)
 
 # items data complate/incomplate
@@ -858,7 +858,7 @@ from routes.listing_routes.upload_shiksha_route import shiksha_bp
 from routes.listing_routes.upload_yellow_pages_route import yellow_pages_bp
 from routes.product_routes.upload_amazon_products_route import amazon_bp
 from routes.product_routes.upload_vivo_route import vivo_bp
-from routes.product_routes.upload_big_basket_route import upload_big_basket_route
+from routes.product_routes.upload_big_basket_route import bigbasket_bp
 from routes.product_routes.upload_blinkit_route import blinkit_bp
 from routes.product_routes.upload_dmart_route import dmart_bp
 from routes.product_routes.upload_flipkart_products_route import flipkart_bp
@@ -882,6 +882,7 @@ blueprints_listing = [(asklaila_bp, "/asklaila"),
     (shiksha_bp, "/shiksha"),
     (yellow_pages_bp, "/yellow-pages"),
     (amazon_bp,"/amazon"),
+    (bigbasket_bp,"/bigbasket"),
     (vivo_bp,"/vivo"),
     (blinkit_bp,"/blinkit"),
     (dmart_bp,"/dmart"),
