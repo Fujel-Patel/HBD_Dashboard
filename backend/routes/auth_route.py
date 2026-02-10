@@ -75,7 +75,7 @@ def login():
         print(f"--- FAILED: User '{email}' not found in database ---")
         return jsonify({"message": "Invalid credentials"}), 401
 
-    print(f"3. User found: ID {user.id}, Hash: {user.password_hash[:10]}...") # Debug Print
+    print(f"3. User found: ID {user.id}, Hash: {user.password}...") # Debug Print
 
     if not user.check_password(password):
         print("--- FAILED: Password hash mismatch ---")

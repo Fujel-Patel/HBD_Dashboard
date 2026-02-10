@@ -6,7 +6,8 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from fake_useragent import UserAgent
-
+import re
+from urllib.parse import unquote
 # --- App & DB Imports ---
 from extensions import db
 from model.scraper_task import ScraperTask
@@ -54,24 +55,34 @@ def get_product_details(url):
         
         # 1. ASIN (Required)
         asin = None
-        if '/dp/' in url: 
-            parts = url.split('/dp/')
-            if len(parts) > 1: asin = parts[1].split('/')[0].split('?')[0]
-        elif '/gp/product/' in url: 
-            parts = url.split('/gp/product/')
-            if len(parts) > 1: asin = parts[1].split('/')[0].split('?')[0]
             
-        if not asin: 
-            print("xx No ASIN found in URL.")
-            return None 
+            # specific patterns for Amazon URLs
+            # We unquote first to handle "sspa" (sponsored) links where the ASIN is encoded like %2Fdp%2F
+        clean_url = unquote(url)
+            
+            # Regex: Look for /dp/ or /gp/product/ followed by exactly 10 alphanumeric chars
+        match = re.search(r'(?:/dp/|/gp/product/)([A-Z0-9]{10})', clean_url)
+            
+        if match:
+                asin = match.group(1)
+        else:
+                print(f"xx No ASIN found in URL: {url[:60]}...") # Print first 60 chars to debug
+                return None
 
         # 2. Extract Fields (With Safe Defaults for Strict DB)
-        name_elem = soup.select_one("#productTitle")
+        name_elem = soup.select_one("#productTitle") or \
+                soup.select_one("h1#title") or \
+                soup.select_one("h1.a-size-large") or \
+                soup.select_one("h1.a-size-medium") or \
+                    soup.select_one("#titleSection h1")
         name = name_elem.get_text().strip() if name_elem else "Unknown Product"
 
+        # Debugging: If still unknown, print the page title to see what Amazon served
+        if name == "Unknown Product":
+            page_title = soup.title.string.strip() if soup.title else "No Page Title"
         price_elem = soup.select_one('.a-price-whole')
         price = '₹' + price_elem.get_text().strip().replace(',', '') if price_elem else "₹0"
-        
+
         rating_elem = soup.select_one('.a-icon-alt')
         rating_str = rating_elem.get_text().split()[0] if rating_elem else "0"
         try:
