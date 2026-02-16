@@ -4,12 +4,8 @@ from datetime import timedelta
 import urllib.parse  # Added for password encoding
 
 load_dotenv()
-
 class Config:
-    # Flask secret key (for sessions, CSRF)
-    SECRET_KEY = os.getenv("SECRET_KEY")
-    if not SECRET_KEY:
-        raise ValueError("SECRET_KEY must be set in .env file")
+    SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")  
 
     # --- Database configuration (FIXED for special characters) ---
     DB_USER = os.getenv('DB_USER')
@@ -52,3 +48,13 @@ class Config:
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    SQLALCHEMY_DATABASE_URI = (
+    f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT','3306')}/{os.getenv('DB_NAME')}"
+)
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-secret")  # for token
