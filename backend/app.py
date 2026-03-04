@@ -1,6 +1,22 @@
-from gevent import monkey
-monkey.patch_all()
+import sys
+import warnings
+
+# Suppress noisy library warnings
+warnings.filterwarnings("ignore", message="urllib3.*charset_normalizer.*doesn't match")
+warnings.filterwarnings("ignore", module="requests")
+
+# Apply gevent monkey patching ONLY for production WSGI server, otherwise it breaks Ctrl+C in Flask dev server
+if "--runserver" in sys.argv:
+    from gevent import monkey
+    monkey.patch_all()
 import os
+import sys
+
+# Windows console encoding fix
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import verify_jwt_in_request
@@ -67,6 +83,10 @@ from routes.product_routes.upload_flipkart_products_route import flipkart_bp
 from routes.product_routes.upload_india_mart_route import indiamart_bp
 from routes.product_routes.upload_jio_mart_route import jiomart_bp
 from routes.gdrive_etl_routes.validation_dashboard import validation_dashboard_bp
+from routes.gdrive_etl_routes.dashboard_stats import dashboard_bp
+
+import sys
+import signal
 # --- Initialize App ---
 load_dotenv()
 app = Flask(__name__)
@@ -81,6 +101,9 @@ mail.init_app(app)
 
 with app.app_context():
     db.create_all()
+    from utils.db_migrations import run_pending_migrations
+    print("🔄 Running Database Migrations...")
+    run_pending_migrations(app)
 
 # --- GLOBAL JWT PROTECTION ---
 PUBLIC_ROUTES = [
@@ -99,12 +122,20 @@ PUBLIC_ROUTES = [
     "/api/asklaila/fetch-data",
     "/api/college-dunia/fetch-data",
     "/api/post-office/fetch-data",
-    # Legacy listing endpoints kept public for compatibility
-    "/google-listings",
-    "/listing-master",
-    "/complete-data",
+    "/api/nearbuy/fetch-data",
+    "/api/justdial/fetch-data",
+    "/api/heyplaces/fetch-data",
     # Validation dashboard
     "/api/validation/dashboard",
+    "/api/validation/errors",
+    "/api/validation/clean",
+    "/api/validation/report",
+    "/api/model/stats",
+    "/api/model/recent",
+    "/api/model/all",
+    "/api/model/files",
+    "/api/model/state-summary",
+    "/api/model/folder-status",
 ]
 
 @app.before_request
@@ -142,6 +173,7 @@ app.register_blueprint(item_duplicate_bp)
 app.register_blueprint(upload_others_csv_bp)
 app.register_blueprint(listing_master_bp, url_prefix="/api")
 app.register_blueprint(validation_dashboard_bp)
+app.register_blueprint(dashboard_bp)
 
 # --- Register Listing & Product Blueprints (Batch) ---
 blueprints_listing = [
@@ -157,9 +189,47 @@ blueprints_listing = [
 ]
 
 for bp, prefix in blueprints_listing:
-    app.register_blueprint(bp, url_prefix=prefix)
+    app.register_blueprint(bp, url_prefix=f"/api{prefix}")
 
 @app.route('/')
 def index():
     return jsonify({"message": "Flask API is running! Clean and Modular."})
 
+if __name__ == '__main__':
+    print("🔗 Starting Flask API Server (Background tasks are handled by worker_etl.py and Celery)...")
+
+    import sys
+    # Handle the --runserver flag
+    if "--runserver" in sys.argv:
+        # Noisy 30-second terminal monitor removed. Use `python gdrive_status.py` instead.
+        
+        from gevent.pywsgi import WSGIServer
+        print("🚀 Starting Gevent WSGI Server on http://0.0.0.0:5000")
+        http_server = WSGIServer(('0.0.0.0', 5000), app)
+
+        def shutdown():
+            print('\n🛑 shutdown signal received. Stopping API server...')
+            http_server.stop()
+            print("✅ Shutdown complete.")
+            sys.exit(0)
+
+        # Optional handle for SIGINT if supported
+        import signal
+        import gevent
+        try:
+            gevent.signal_handler(signal.SIGINT, shutdown)
+        except AttributeError:
+            # Windows doesn't support gevent.signal_handler, fallback
+            pass
+
+        try:
+            http_server.serve_forever()
+        except KeyboardInterrupt:
+            shutdown()
+    else:
+        # Fallback to standard Flask for local dev
+        try:
+            app.run(host='0.0.0.0', port=5000, debug=True)
+        except KeyboardInterrupt:
+            print('\n🛑 shutdown signal received. Stopping local dev server...')
+            sys.exit(0)

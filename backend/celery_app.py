@@ -1,19 +1,34 @@
+import warnings
+warnings.filterwarnings("ignore", message="urllib3.*charset_normalizer.*doesn't match")
+warnings.filterwarnings("ignore", module="requests")
+
 from gevent import monkey
 monkey.patch_all()
 
+# Patch gevent hub IMMEDIATELY after monkey-patching so the pidbox greenlet
+# never prints its noisy TimeoutError traceback to stderr.
+import gevent
+try:
+    _hub = gevent.get_hub()
+    _not_err = _hub.NOT_ERROR
+    import redis as _redis_mod
+    for _exc in (TimeoutError, _redis_mod.exceptions.TimeoutError):
+        if _exc not in _not_err:
+            _not_err = _not_err + (_exc,)
+    _hub.NOT_ERROR = _not_err
+except Exception:
+    pass
+
 import os
-from logging.handlers import TimedRotatingFileHandler
-from datetime import datetime
+import re
 import pathlib
-import logging
-import os
 import logging
 import redis
 import requests
+from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 from celery import Celery
 from celery.signals import worker_ready, setup_logging
-
-import re
 # ... (rest of imports)
 
 celery = Celery("tasks")
@@ -69,6 +84,7 @@ def setup_celery_logging(**kwargs):
     logging.getLogger('celery.worker.consumer.mingle').setLevel(logging.WARNING)
     logging.getLogger('celery.worker.gossip').setLevel(logging.WARNING)
     logging.getLogger('celery.worker.control').setLevel(logging.WARNING)
+    logging.getLogger('celery.worker.pidbox').setLevel(logging.CRITICAL)  # Silence pidbox timeout noise
     
     # Silence 'Task succeeded' default log
     logging.getLogger('celery.app.trace').setLevel(logging.WARNING)
@@ -82,11 +98,25 @@ celery.conf.update(
     result_serializer='json',
     timezone='UTC',
     enable_utc=True,
-    # Optimizations:
-    worker_prefetch_multiplier=1,      # Prevent worker from hoarding tasks (fair distribution)
-    task_acks_late=True,               # Only ack after successful return (reliability)
-    task_reject_on_worker_lost=True,   # Re-queue task if worker crashes
-    result_expires=86400,              # Expire results after 24h to save Redis RAM
+    # Stable Optimizations:
+    worker_concurrency=6,              # Reduced to prevent resource exhaustion
+    worker_prefetch_multiplier=2,     
+    task_ignore_result=True,           
+    task_acks_late=True,               
+    task_reject_on_worker_lost=True,   
+    result_expires=3600,
+    # Redis Resilience:
+    broker_connection_retry_on_startup=True,    # Auto-reconnect if Redis restarts
+    broker_connection_retry=True,               # Keep retrying on connection loss
+    broker_connection_max_retries=None,          # Never stop trying
+    worker_cancel_long_running_tasks_on_connection_loss=True,  # Clean up on disconnect
+    broker_transport_options={
+        'health_check_interval': 10,
+        'socket_timeout': 30,
+        'socket_connect_timeout': 30,
+        'retry_on_timeout': True,
+        'socket_keepalive': True,
+    },
 )
 
 # SECTION 6: Periodic Stats Refresh Schedule
@@ -117,6 +147,7 @@ import tasks.listings_task.upload_yellow_pages_task
 import tasks.listings_task.upload_shiksha_task
 import tasks.products_task.upload_amazon_products_task
 import tasks.products_task.upload_big_basket_task
+import tasks.products_task.amazon_scraper_task
 import tasks.gdrive_task.etl_tasks
 import tasks.deep_scraper_task
 
