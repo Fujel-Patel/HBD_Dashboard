@@ -4,32 +4,31 @@ from extensions import db
 
 logger = logging.getLogger(__name__)
 
+
+def _table_exists(engine, table_name):
+    """Check if a table exists using SQLAlchemy inspect (no open transaction needed)."""
+    return inspect(engine).has_table(table_name)
+
+
 def run_pending_migrations(app):
     """
     Executes safe, idempotent database migrations.
-    Now includes existence checks to prevent "Table doesn't exist" crashes.
+    Each migration step uses its own engine.begin() block to avoid
+    SQLAlchemy 2.x transaction-state conflicts.
     """
     with app.app_context():
         try:
             logger.info("🔄 Checking for pending DB migrations...")
             engine = db.engine
-            
-            with engine.connect() as conn:
-                
-                # --- Helper function to check if a table exists ---
-                def table_exists(table_name):
-                    check = text("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tname")
-                    return conn.execute(check, {"tname": table_name}).scalar() > 0
 
-                # === ISSUE 2: drive_folder_registry Status ENUM Fix ===
-                if table_exists('drive_folder_registry'):
-                    trans = conn.begin()
+            # === ISSUE 2: drive_folder_registry Status ENUM Fix ===
+            if _table_exists(engine, 'drive_folder_registry'):
+                with engine.begin() as conn:
                     try:
                         conn.execute(text("UPDATE drive_folder_registry SET status='DONE' WHERE status IN ('Completed', 'UPDATED', 'Processed')"))
                         conn.execute(text("UPDATE drive_folder_registry SET status='SCANNING' WHERE status IN ('Processing', 'Scanning', 'InProgress')"))
                         conn.execute(text("UPDATE drive_folder_registry SET status='PENDING' WHERE status IN ('Pending', 'New')"))
                         conn.execute(text("UPDATE drive_folder_registry SET status='ERROR' WHERE status IN ('Error', 'Failed')"))
-                        
                         conn.execute(text("""
                             ALTER TABLE drive_folder_registry 
                             MODIFY COLUMN status ENUM('PENDING', 'SCANNING', 'DONE', 'ERROR') 
@@ -38,16 +37,15 @@ def run_pending_migrations(app):
                         logger.info("✅ `drive_folder_registry` status column migrated to ENUM.")
                     except Exception as e:
                         logger.warning(f"⚠️ drive_folder_registry migration skipped: {e}")
-                        trans.rollback()
-                    else:
-                        trans.commit()
-                else:
-                    logger.warning("⏩ Table `drive_folder_registry` does not exist yet. Skipping ENUM update.")
+                        raise
+            else:
+                logger.warning("⏩ Table `drive_folder_registry` does not exist yet. Skipping ENUM update.")
 
-                # === FIX: Use 'raw_google_map' instead of 'raw_google_map_drive_data' ===
-                TARGET_TABLE = "raw_google_map"
+            # === FIX: Use 'raw_google_map' instead of 'raw_google_map_drive_data' ===
+            TARGET_TABLE = "raw_google_map"
 
-                if table_exists(TARGET_TABLE):
+            if _table_exists(engine, TARGET_TABLE):
+                with engine.begin() as conn:
                     # Check and Add Missing Columns
                     columns_to_check = [
                         ("full_drive_path", "TEXT"),
@@ -95,11 +93,12 @@ def run_pending_migrations(app):
                                 logger.info(f"✅ Created index: {name}")
                         except Exception as e:
                             logger.error(f"❌ Failed to create index {name}: {e}")
-                else:
-                    logger.warning(f"⏩ Table `{TARGET_TABLE}` does not exist yet. Skipping column updates.")
+            else:
+                logger.warning(f"⏩ Table `{TARGET_TABLE}` does not exist yet. Skipping column updates.")
 
-                # === ISSUE 5: file_hash Column on file_registry ===
-                if table_exists('file_registry'):
+            # === ISSUE 5: file_hash Column on file_registry ===
+            if _table_exists(engine, 'file_registry'):
+                with engine.begin() as conn:
                     try:
                         col_check = text("""
                             SELECT COUNT(*) FROM information_schema.COLUMNS
@@ -110,12 +109,14 @@ def run_pending_migrations(app):
                             logger.info("✅ Column `file_hash` added to file_registry.")
                     except Exception as e:
                         logger.error(f"❌ Failed to add `file_hash` to file_registry: {e}")
-                else:
-                    logger.warning("⏩ Table `file_registry` does not exist yet. Skipping column update.")
+                        raise
+            else:
+                logger.warning("⏩ Table `file_registry` does not exist yet. Skipping column update.")
 
-                # === ISSUE 3: Dead Letter Queue Table ===
-                try:
-                    if not table_exists('etl_dlq'):
+            # === ISSUE 3: Dead Letter Queue Table ===
+            if not _table_exists(engine, 'etl_dlq'):
+                with engine.begin() as conn:
+                    try:
                         logger.info("⚠️ Table `etl_dlq` missing. Creating it now...")
                         conn.execute(text("""
                             CREATE TABLE etl_dlq (
@@ -130,11 +131,11 @@ def run_pending_migrations(app):
                             )
                         """))
                         logger.info("✅ Table `etl_dlq` created successfully.")
-                except Exception as e:
-                    logger.error(f"❌ Failed to create `etl_dlq` table: {e}")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to create `etl_dlq` table: {e}")
 
-                # === ISSUE 6: Validation, Cleaning and Logging Tables ===
-                # (These are already wrapped in CREATE TABLE IF NOT EXISTS, so they are safe)
+            # === ISSUE 6: Validation, Cleaning and Logging Tables ===
+            with engine.begin() as conn:
                 try:
                     tables_to_create = [
                         ("validation_raw_google_map", """
@@ -192,6 +193,6 @@ def run_pending_migrations(app):
                     logger.error(f"❌ Failed to ensure validation tables exist: {e}")
 
             print("🏁 DB Migrations check complete.")
-            
+
         except Exception as e:
             logger.error(f"❌ Critical Migration Error: {e}")

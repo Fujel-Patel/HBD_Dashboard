@@ -55,7 +55,7 @@ class Config:
     # Add ETL/Google Drive/Batch config for Celery tasks
     SERVICE_ACCOUNT_FILE = os.getenv(
         "SERVICE_ACCOUNT_FILE",
-        os.path.join(os.getcwd(), "model", "honey-bee-digital-d96daf6e6faf.json")
+        os.path.join(os.path.dirname(__file__), "model", "honey-bee-digital-d96daf6e6faf.json")
     )
     # Define a single source for the database URI to avoid confusion and errors
     DATABASE_URI = SQLALCHEMY_DATABASE_URI

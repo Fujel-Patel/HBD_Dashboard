@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -17,7 +18,8 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_NAME = os.getenv('DB_NAME')
 DB_PORT = os.getenv('DB_PORT')
 
-print(f"DEBUG ENV -> HOST: {DB_HOST} USER: {DB_USER} PASS: {'*' * len(DB_PASSWORD or '')} DB: {DB_NAME}")
+logger = logging.getLogger(__name__)
+logger.debug(f"DB Config -> HOST: {DB_HOST} USER: {DB_USER} DB: {DB_NAME}")
 
 import urllib.parse
 # Construct database URL dynamically from environment variables

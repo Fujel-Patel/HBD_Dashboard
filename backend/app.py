@@ -1,3 +1,5 @@
+from gevent import monkey
+monkey.patch_all()
 import os
 import sys
 from flask import Flask, jsonify, request
@@ -100,22 +102,27 @@ cors.init_app(app, resources={r"/*": {"origins": "*"}}, supports_credentials=Tru
 mail.init_app(app)
 
 with app.app_context():
-    try:
-        db.session.execute(db.text('SELECT 1'))
-        print("✅ DATABASE CONNECTION: SUCCESS (Live on 77.42.78.20)")
-    except Exception as e:
-        print(f"❌ DATABASE CONNECTION: FAILED! Error: {e}")
-
     db.create_all()
-  
-  #Migration Logic...
 
-    try:
-        from utils.db_migrations import run_pending_migrations
-        print("🔄 Running Database Migrations...")
-        run_pending_migrations(app)
-    except ImportError:
-        pass
+def _run_startup_checks():
+    """DB connection test + migrations. Called once when the server is ready."""
+    with app.app_context():
+        try:
+            db.session.execute(db.text('SELECT 1'))
+            print(f"✅ DATABASE CONNECTION: SUCCESS (Host: {app.config.get('DB_HOST', 'unknown')})")
+        except Exception as e:
+            print(f"❌ DATABASE CONNECTION: FAILED! Error: {e}")
+
+        try:
+            from utils.db_migrations import run_pending_migrations
+            print("🔄 Running Database Migrations...")
+            run_pending_migrations(app)
+        except ImportError:
+            pass
+
+# For WSGI servers (gunicorn, passenger) — run checks on import since there's no reloader
+if os.environ.get('WERKZEUG_RUN_MAIN') is None and __name__ != '__main__':
+    _run_startup_checks()
 
 # --- GLOBAL JWT PROTECTION ---
 PUBLIC_ROUTES = [
@@ -214,5 +221,10 @@ def index():
     return jsonify({"message": "Flask API is running! Clean and Modular."})
 
 if __name__ == '__main__':
-    # Defaulting to 8090 to match your gunicorn setup
+    # In debug mode, Werkzeug reloader runs the module twice:
+    # 1) Parent process (spawns the child) — WERKZEUG_RUN_MAIN is NOT set
+    # 2) Child process (serves requests)  — WERKZEUG_RUN_MAIN='true'
+    # Run startup checks only in the child to avoid duplicate logs.
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        _run_startup_checks()
     app.run(host='0.0.0.0', port=8090, debug=True)
