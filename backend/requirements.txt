@@ -6,11 +6,13 @@ python-dotenv
 pydantic
 playwright
 beautifulsoup4
-requests
 fake-useragent
 flask_sqlalchemy
 flask_jwt_extended
-chardet
+requests==2.31.0
+urllib3==1.26.18
+chardet==5.1.0
+charset_normalizer==3.3.2
 gunicorn
 sqlalchemy
 pymysql

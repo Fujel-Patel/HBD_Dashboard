@@ -41,6 +41,14 @@ logger.setLevel(logging.INFO)
 
 # Centralized configuration
 SERVICE_ACCOUNT_FILE = config.SERVICE_ACCOUNT_FILE
+_SA_FILE_OK = os.path.exists(SERVICE_ACCOUNT_FILE)
+if not _SA_FILE_OK:
+    logger.error(
+        "[CONFIG] Google Drive service account file not found: %s\n"
+        "  -> Place the JSON at that path OR set SERVICE_ACCOUNT_FILE in backend/.env\n"
+        "  -> All GDrive CSV tasks will be SKIPPED until this is resolved.",
+        SERVICE_ACCOUNT_FILE
+    )
 DATABASE_URI = config.DATABASE_URI
 MAX_FILE_SIZE_MB = config.MAX_FILE_SIZE_MB
 ETL_VERSION = config.ETL_VERSION
@@ -388,6 +396,12 @@ def trigger_stats_refresh():
 )
 def process_csv_task(self, file_id, file_name, folder_id, folder_name, path, modified_time):
     global shutdown_requested
+
+    # Fast-fail: skip all tasks when service account is missing (startup log already announced it)
+    if not _SA_FILE_OK:
+        logger.debug("Skipping %s — service account not configured (see startup error)", file_name)
+        return f"Skipped {file_name}: GDrive credentials not configured"
+
     start_time = time.time()
     task_id = self.request.id
     
@@ -463,7 +477,7 @@ def process_csv_task(self, file_id, file_name, folder_id, folder_name, path, mod
         
         # Aggregated Logging via Redis
         try:
-            r = redis.Redis(host='localhost', port=6379, db=0)
+            r = redis.Redis.from_url(os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0'))
             total_files = r.incr('celery_files_processed')
             total_rows = r.incrby('celery_rows_inserted', actual_inserted)
             
@@ -486,6 +500,13 @@ def process_csv_task(self, file_id, file_name, folder_id, folder_name, path, mod
         logger.debug(f"Triggering stats refresh (Counter: {2300})") # Placeholder counter
         trigger_stats_refresh()
         return f"Processed {file_name}: {row_count} read, {actual_inserted} inserted"
+
+    except FileNotFoundError as e:
+        # Config/credential errors — do NOT retry (retrying won't fix a missing file)
+        err_msg = str(e)
+        logger.error("[CONFIG ERROR] %s: %s", file_name, err_msg, extra={'task_id': task_id})
+        update_file_status(file_id, file_name, 'ERROR', err_msg, file_hash=file_hash, folder_id=folder_id)
+        return f"Failed (no retry): {file_name} — config error"
 
     except Exception as e:
         err_msg = str(e)

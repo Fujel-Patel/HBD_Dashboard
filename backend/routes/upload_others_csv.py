@@ -3,15 +3,24 @@ import pandas as pd
 from sqlalchemy import create_engine, Table, Column, Integer, Text, MetaData, inspect
 from sqlalchemy.exc import SQLAlchemyError
 import os
+import urllib.parse
 from flask_cors import CORS
 import chardet  # <-- added for automatic encoding detection
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Blueprint
 upload_others_csv_bp = Blueprint("upload_others_csv", __name__)
 CORS(upload_others_csv_bp)
 
-# SQLAlchemy engine
-engine = create_engine("mysql+pymysql://root:vivek123@localhost:3306/dummy")
+# SQLAlchemy engine — reads from .env
+_db_user = os.getenv('DB_USER')
+_db_pass = urllib.parse.quote_plus(os.getenv('DB_PASSWORD', ''))
+_db_host = os.getenv('DB_HOST', 'localhost')
+_db_port = os.getenv('DB_PORT', '3306')
+_db_name = os.getenv('DB_NAME')
+engine = create_engine(f"mysql+pymysql://{_db_user}:{_db_pass}@{_db_host}:{_db_port}/{_db_name}")
 metadata = MetaData()
 
 @upload_others_csv_bp.route("/upload_others_csv", methods=["POST"])

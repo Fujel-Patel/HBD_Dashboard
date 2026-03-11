@@ -303,7 +303,7 @@ class GDriveHighSpeedIngestor:
         if self.first_run:
             # Reset Celery Aggregated Counters in Redis ONLY on first startup
             try:
-                r = redis.Redis(host='localhost', port=6379, db=0)
+                r = redis.Redis.from_url(os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0'))
                 r.set('celery_files_processed', 0)
                 r.set('celery_rows_inserted', 0)
                 logger.debug("🔄 Redis Counters Reset (files & rows)")
