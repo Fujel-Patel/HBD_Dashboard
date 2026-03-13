@@ -22,13 +22,23 @@ const MasterDataDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const baseUrl = import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_URL || "");
         const query = taskId ? `?task_id=${taskId}` : "";
-        const url = `${baseUrl}/master-dashboard-stats${query}`;
+        
+        // 1. Force the /api prefix to ensure Nginx routes it to Flask
+        const url = `/api/master-dashboard-stats${query}`;
 
         const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+          headers: { 
+            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+            "Content-Type": "application/json" 
+          }
         });
+
+        // 2. Check if the response is actually JSON before parsing to avoid the '<' error
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Server returned HTML instead of JSON. The API route might be incorrect.");
+        }
 
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -36,7 +46,7 @@ const MasterDataDashboard = () => {
 
         const result = await response.json();
 
-        // Accept any shape where stats exist (some deployments may use a different status key)
+        // 3. Accept any shape where stats exist
         if (result.stats) {
           setDashboardData(result.stats);
           setError(null);
@@ -44,12 +54,11 @@ const MasterDataDashboard = () => {
           setDashboardData(result.stats);
           setError(null);
         } else {
-          const msg = result.message || "Unexpected response from server";
-          throw new Error(msg);
+          throw new Error(result.message || "Unexpected response from server");
         }
       } catch (err) {
         console.error("Fetch error:", err);
-        setError(err.message || "Unknown error");
+        setError(err.message || "Failed to load dashboard data.");
         setDashboardData(null);
       }
     };
@@ -93,7 +102,6 @@ const MasterDataDashboard = () => {
             label="State" 
         />
         
-        {/* FIXED: Replaced SummaryTable with ChartBox for Phone Distribution */}
         <ChartBox title="Phone Number Availability" icon={<PhoneIcon className="w-5 h-5 text-green-500"/>}>
           <PieChart>
             <Pie 
@@ -151,12 +159,12 @@ const MasterDataDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {dashboardData.top_rated_businesses.map(biz => (
-                <tr key={biz.id} className="border-b hover:bg-gray-50">
+              {dashboardData.top_rated_businesses.map((biz, idx) => (
+                <tr key={biz.id || idx} className="border-b hover:bg-gray-50">
                   <td className="p-3 font-bold text-gray-800">{biz.name}</td>
                   <td className="p-3 text-sm">
                     <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold">
-                        {biz.count}
+                        {biz.count || biz.listings_count || 1}
                     </span>
                   </td>
                   <td className="p-3 text-gray-600">{biz.city}</td>
@@ -171,6 +179,8 @@ const MasterDataDashboard = () => {
   );
 };
 
+// --- Helper Components ---
+
 const SummaryTable = ({ title, data, label }) => (
   <div className="bg-white p-6 rounded-xl border shadow-sm h-96 overflow-hidden flex flex-col">
     <h3 className="font-bold text-gray-700 mb-4">{title}</h3>
@@ -182,7 +192,7 @@ const SummaryTable = ({ title, data, label }) => (
           <tbody>
             {(data || []).map((item, i) => (
               <tr key={i} className="border-b last:border-none">
-                <td className="py-3 font-medium text-gray-700">{item.state || item.data_source}</td>
+                <td className="py-3 font-medium text-gray-700">{item.state || item.data_source || item.name}</td>
                 <td className="py-3 text-right font-bold text-blue-600">{item.count?.toLocaleString()}</td>
               </tr>
             ))}

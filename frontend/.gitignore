@@ -14,7 +14,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
+honey-bee-digital-d96daf6e6faf.json
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

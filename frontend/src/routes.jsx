@@ -19,7 +19,7 @@ import {
 
 
 import MasterDataUploader from "./componunts/data import/MasterDataUploader";
-import MasterData from "./componunts/masterdata/Masterdata";
+import MasterDataRegistry from "./componunts/masterdata/MasterDataRegistry";
 import { Home } from "./pages/dashboard/home";
 import { Profile } from "./pages/dashboard/profile";
 import { Tables } from "./pages/dashboard/tables";
@@ -383,7 +383,7 @@ export const routes = [
             icon: <TableCellsIcon {...icon} />,
             name: "Master Data Table",
             path: "/masterdata/master-registry",
-            element: <MasterData />,
+            element: <MasterDataRegistry/>,
           },
           {
             icon: <MapPinIcon {...icon} />,

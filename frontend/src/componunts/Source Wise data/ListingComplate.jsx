@@ -8,8 +8,10 @@ import {
   BuildingOfficeIcon, Square3Stack3DIcon, CheckBadgeIcon, TrophyIcon
 } from "@heroicons/react/24/solid";
 import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
-import * as XLSX from "xlsx/dist/xlsx.full.min.js";
-import api from "@/utils/Api"; 
+
+// FIX 1: Standardized the XLSX import so Vite doesn't crash
+import * as XLSX from "xlsx";
+import api from "../../utils/Api"; // Ensure this path matches your project structure
 
 // --- Helper Functions for Source Badges ---
 const getSourceColor = (src) => {
@@ -168,13 +170,41 @@ const ListingComplete = () => {
     }, [rawData, activeTab, search, categoryFilter]);
 
 
-  // --- 4. Export Functionality ---
+  // --- 4. Export Functionality (FIX 2) ---
   const handleExport = () => {
     if (!processedData.length) return;
-    const sheetName = activeTab.replace("-", "_").toUpperCase() + "_DATA";
-    const ws = XLSX.utils.json_to_sheet(processedData);
+
+    // 1. Format the data to match the UI columns cleanly
+    const exportData = processedData.map(row => {
+      if (activeTab === "category-breakdown") {
+        return {
+          "Category Name": row.category_name,
+          "Unique Businesses": row.business_count,
+          "Avg. Sources per Business": row.avg_sources
+        };
+      } else {
+        return {
+          "Store / Business Name": row.business_name || "N/A",
+          "Service / Category": row.category || "Uncategorized",
+          "Total Listings": row.total_listings || 0,
+          "Found On Sources": row.sources || "N/A"
+        };
+      }
+    });
+
+    // 2. Safely create sheet name and enforce Excel's 31-character limit
+    let sheetName = activeTab.replace("-", "_").toUpperCase();
+    sheetName = sheetName.substring(0, 31); 
+
+    // 3. Generate and Download
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    
+    // Auto-size the columns a bit for readability
+    const colWidths = Object.keys(exportData[0] || {}).map(key => ({ wch: Math.max(key.length, 20) }));
+    ws['!cols'] = colWidths;
+
     XLSX.writeFile(wb, `Listing_Master_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
