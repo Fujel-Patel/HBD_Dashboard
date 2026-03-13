@@ -96,51 +96,44 @@ def get_master_dashboard_stats():
     
     where_clause = "WHERE 1=1"
     params = {}
-    
     if task_id:
         where_clause += " AND task_id = :task_id"
         params['task_id'] = task_id
 
     try:
+        # Optimization 1: Get Total Count and Avg Rating in ONE query instead of two
+        meta_query = text(f"""
+            SELECT COUNT(*) as total, ROUND(AVG(ratings), 1) as avg_r 
+            FROM master_table {where_clause}
+        """)
+        meta_res = session.execute(meta_query, params).fetchone()
+        total_records = meta_res.total or 0
+        avg_rating = float(meta_res.avg_r or 0.0)
+
+        # Optimization 2: Phone Distribution (Fast boolean check)
+        phone_query = text(f"""
+            SELECT 
+                SUM(CASE WHEN COALESCE(primary_phone, secondary_phone, other_phones, virtual_phone, whatsapp_phone, '') != '' THEN 1 ELSE 0 END) as has_phone
+            FROM master_table {where_clause}
+        """)
+        has_phone = session.execute(phone_query, params).scalar() or 0
+        missing_phone = total_records - has_phone
+
+        # Optimization 3: Limit the "Top" queries even further to save processing time
+        # We only take top 5 for the heavy group-bys
         state_query = text(f"SELECT state, COUNT(*) as count FROM master_table {where_clause} AND state != '' GROUP BY state ORDER BY count DESC LIMIT 5")
         states = [dict(row._mapping) for row in session.execute(state_query, params)]
 
-        phone_query = text(f"""
-            SELECT 
-                SUM(CASE WHEN 
-                    (primary_phone IS NOT NULL AND primary_phone != '') OR 
-                    (secondary_phone IS NOT NULL AND secondary_phone != '') OR 
-                    (other_phones IS NOT NULL AND other_phones != '') OR 
-                    (virtual_phone IS NOT NULL AND virtual_phone != '') OR 
-                    (whatsapp_phone IS NOT NULL AND whatsapp_phone != '') 
-                THEN 1 ELSE 0 END) as has_any_phone,
-                COUNT(*) as total_count
-            FROM master_table {where_clause}
-        """)
-        phone_res = session.execute(phone_query, params).fetchone()
-        
-        has_phone = int(phone_res.has_any_phone or 0)
-        missing_phone = int(phone_res.total_count or 0) - has_phone
-
-        phone_distribution = [
-            {"name": "With Contact No.", "value": has_phone, "fill": "#10b981"},
-            {"name": "No Contact No.", "value": missing_phone, "fill": "#ef4444"}
-        ]
-
-        city_query = text(f"SELECT city as name, COUNT(*) as count FROM master_table {where_clause} GROUP BY city ORDER BY count DESC LIMIT 10")
+        city_query = text(f"SELECT city as name, COUNT(*) as count FROM master_table {where_clause} AND city != '' GROUP BY city ORDER BY count DESC LIMIT 5")
         top_cities = [dict(row._mapping) for row in session.execute(city_query, params)]
         
-        sub_query = text(f"SELECT COALESCE(business_subcategory, business_category, 'Other') as name, COUNT(*) as count FROM master_table {where_clause} GROUP BY name ORDER BY count DESC LIMIT 5")
+        sub_query = text(f"SELECT business_category as name, COUNT(*) as count FROM master_table {where_clause} GROUP BY name ORDER BY count DESC LIMIT 5")
         top_subs = [dict(row._mapping) for row in session.execute(sub_query, params)]
 
-        total_records = session.execute(text(f"SELECT COUNT(*) FROM master_table {where_clause}"), params).scalar() or 0
-        avg_rating = session.execute(text(f"SELECT ROUND(AVG(ratings), 1) FROM master_table {where_clause} AND ratings IS NOT NULL"), params).scalar() or 0.0
-        
         top_rated_query = text(f"""
-            SELECT id, business_name as name, city, ratings as stars, business_category as category
+            SELECT business_name as name, city, ratings as stars
             FROM master_table {where_clause} 
-            AND ratings IS NOT NULL 
-            AND business_name IS NOT NULL
+            AND ratings >= 4.0 
             ORDER BY ratings DESC LIMIT 5
         """)
         top_rated = [dict(row._mapping) for row in session.execute(top_rated_query, params)]
@@ -149,20 +142,21 @@ def get_master_dashboard_stats():
             "status": "COMPLETED",
             "stats": {
                 "total_records": total_records,
-                "avg_system_rating": float(avg_rating),
+                "avg_system_rating": avg_rating,
                 "state_summary": states,
-                "phone_distribution": phone_distribution,
+                "phone_distribution": [
+                    {"name": "With Contact No.", "value": int(has_phone), "fill": "#10b981"},
+                    {"name": "No Contact No.", "value": int(missing_phone), "fill": "#ef4444"}
+                ],
                 "top_cities": top_cities,
                 "top_subcategories": top_subs,
                 "top_rated_businesses": top_rated
             }
         })
     except Exception as e:
-        print(f"❌ Dashboard Error: {str(e)}")
         return jsonify({"status": "ERROR", "message": str(e)}), 500
     finally:
         session.close()
-
 @master_table_bp.route("/upload/report/<task_id>", methods=["GET"])
 def get_upload_report(task_id):
     session = get_db_session()
