@@ -8,7 +8,7 @@ from flask_jwt_extended import verify_jwt_in_request
 from dotenv import load_dotenv
 
 from config import Config
-from extensions import db, jwt, cors, mail, migrate
+from extensions import db, jwt, cors, mail, migrate, init_redis
 
 # --- Import Models ---
 from model.user import User
@@ -100,6 +100,7 @@ migrate.init_app(app, db)
 jwt.init_app(app)
 cors.init_app(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True) 
 mail.init_app(app)
+init_redis(app)
 
 with app.app_context():
     db.create_all()
